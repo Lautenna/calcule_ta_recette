@@ -1,0 +1,21 @@
+# Symfony
+backend/.env.local
+backend/.env.local.php
+backend/.env.*.local
+backend/var/
+backend/vendor/
+backend/public/bundles/
+backend/.phpunit.result.cache
+backend/coverage/
+
+# Node / Vite
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+
+# IDEs / OS
+.idea/
+.vscode/
+*.DS_Store
+*.swp
