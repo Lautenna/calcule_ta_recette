@@ -1,0 +1,11 @@
+@keyframes draw-segment {
+  from { stroke-dashoffset: var(--dash-end); }
+}
+
+.pie-segment {
+  animation: draw-segment 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pie-segment { animation: none; }
+}

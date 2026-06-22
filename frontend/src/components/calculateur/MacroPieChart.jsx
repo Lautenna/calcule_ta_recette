@@ -1,3 +1,6 @@
+import { Group, Stack, Text, Box } from '@mantine/core'
+import './pie.css'
+
 export function MacroPieChart({ perPortion }) {
   const lipCal = (perPortion.graisses || 0) * 9
   const gluCal = (perPortion.glucides || 0) * 4
@@ -13,11 +16,10 @@ export function MacroPieChart({ perPortion }) {
   const CY = 100
   const C = 2 * Math.PI * RADIUS
 
-  // Vert forêt / sauge / terracotta — palette harmonisée
   const slices = [
-    { label: 'Lipides',   cal: lipCal, color: '#3D8B65', grams: perPortion.graisses || 0 },
-    { label: 'Glucides',  cal: gluCal, color: '#6ABFA0', grams: perPortion.glucides  || 0 },
-    { label: 'Protéines', cal: proCal, color: '#C8845A', grams: perPortion.proteines || 0 },
+    { label: 'Lipides',   cal: lipCal, color: '#3D8B65', grams: perPortion.graisses  || 0 },
+    { label: 'Glucides',  cal: gluCal, color: '#6ABFA0', grams: perPortion.glucides   || 0 },
+    { label: 'Protéines', cal: proCal, color: '#C8845A', grams: perPortion.proteines  || 0 },
   ]
 
   let offset = 0
@@ -29,31 +31,25 @@ export function MacroPieChart({ perPortion }) {
   })
 
   return (
-    <div className="pie-zone-inner">
-      <div className="pie-svg-wrapper">
+    <Group justify="center" align="center" gap={56} wrap="wrap">
+      <Box style={{ flexShrink: 0 }}>
         <svg
           viewBox="0 0 200 200"
           width="240"
           style={{ display: 'block' }}
           aria-label={`Répartition macros : ${kcalPortion} kcal par portion`}
         >
-          {/* Piste de fond */}
           <circle
-            cx={CX}
-            cy={CY}
-            r={RADIUS}
+            cx={CX} cy={CY} r={RADIUS}
             fill="none"
-            stroke="var(--border)"
+            stroke="var(--mantine-color-default-border)"
             strokeWidth={STROKE}
           />
-
           {!isEmpty && segments.map((seg, i) => (
             <circle
               key={seg.label}
               className="pie-segment"
-              cx={CX}
-              cy={CY}
-              r={RADIUS}
+              cx={CX} cy={CY} r={RADIUS}
               fill="none"
               stroke={seg.color}
               strokeWidth={STROKE}
@@ -66,58 +62,54 @@ export function MacroPieChart({ perPortion }) {
               }}
             />
           ))}
-
-          {/* Valeur kcal au centre */}
           <text
-            x={CX}
-            y={CY - 7}
+            x={CX} y={CY - 7}
             textAnchor="middle"
             dominantBaseline="auto"
             style={{
-              fontFamily: 'var(--mono)',
+              fontFamily: 'var(--mantine-font-family-monospace)',
               fontSize: '24px',
               fontWeight: 600,
-              fill: 'var(--text-h)',
+              fill: 'var(--mantine-color-text)',
             }}
           >
             {kcalPortion}
           </text>
           <text
-            x={CX}
-            y={CY + 9}
+            x={CX} y={CY + 9}
             textAnchor="middle"
             dominantBaseline="hanging"
             style={{
-              fontFamily: 'var(--mono)',
+              fontFamily: 'var(--mantine-font-family-monospace)',
               fontSize: '9px',
               letterSpacing: '0.07em',
-              fill: 'var(--text)',
+              fill: 'var(--mantine-color-dimmed)',
             }}
           >
             kcal / portion
           </text>
         </svg>
-      </div>
+      </Box>
 
-      <div className="pie-legend">
+      <Stack gap="lg">
         {isEmpty ? (
-          <p className="pie-empty-msg">
+          <Text size="sm" c="dimmed" ta="center" maw={150} lh={1.5}>
             Entrez des valeurs nutritionnelles pour voir la répartition
-          </p>
+          </Text>
         ) : (
           segments.map((seg) => {
             const pct = totalCal > 0 ? Math.round((seg.cal / totalCal) * 100) : 0
             return (
-              <div key={seg.label} className="legend-item">
-                <span className="legend-swatch" style={{ background: seg.color }} />
-                <span className="legend-label">{seg.label}</span>
-                <span className="legend-detail">{seg.grams.toFixed(1)} g</span>
-                <span className="legend-pct">{pct}&thinsp;%</span>
-              </div>
+              <Group key={seg.label} gap="md" align="center" wrap="nowrap">
+                <Box w={12} h={12} style={{ borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
+                <Text c="dimmed" style={{ flex: 1, minWidth: 80 }}>{seg.label}</Text>
+                <Text ff="monospace" size="xs" c="dimmed">{seg.grams.toFixed(1)} g</Text>
+                <Text ff="monospace" fz={20} fw={600} miw={56} ta="right">{pct}&thinsp;%</Text>
+              </Group>
             )
           })
         )}
-      </div>
-    </div>
+      </Stack>
+    </Group>
   )
 }

@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { Table, ScrollArea, Button, Group, Text, Box } from '@mantine/core'
 import { NUTRIENT_KEYS, NUTRIENT_LABELS, fmt } from '../../utils/nutrition'
 
 const OPTIONAL_KEYS = ['fibres', 'fer', 'calcium']
 
 const ALL_COLUMNS = [
-  { key: 'nom',      label: 'Ingrédient',          unit: '',     align: 'left',  optional: false },
-  { key: 'quantite', label: 'Qté',                  unit: 'g',    align: 'right', optional: false },
+  { key: 'nom',      label: 'Ingrédient', unit: '',   align: 'left',  optional: false },
+  { key: 'quantite', label: 'Qté',         unit: 'g',  align: 'right', optional: false },
   ...NUTRIENT_KEYS.map((key) => ({
     key,
     label: NUTRIENT_LABELS[key].label,
@@ -21,63 +22,109 @@ function fmtCell(key, value) {
   return fmt(value)
 }
 
-function TableRow({ row, className, columns }) {
-  return (
-    <tr className={className}>
-      {columns.map(({ key, unit }) => (
-        <td key={key}>
-          {fmtCell(key, row[key])}
-          {key === 'quantite' && row[key] > 0 ? <span style={{ opacity: 0.5, fontSize: 11, marginLeft: 2 }}>g</span> : null}
-        </td>
-      ))}
-    </tr>
-  )
+const thStyle = {
+  fontFamily: 'var(--mantine-font-family-monospace)',
+  fontSize: 10,
+  letterSpacing: '0.07em',
+  textTransform: 'uppercase',
+  whiteSpace: 'nowrap',
+  background: 'var(--mantine-color-default-hover)',
 }
+
+const tdStyle = (key) => ({
+  textAlign: key === 'nom' ? 'left' : 'right',
+  fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
+  fontSize: key !== 'nom' ? 13 : 14,
+})
 
 export function NutritionTable({ rows, total, perPortion }) {
   const [showOptional, setShowOptional] = useState(false)
-
   const columns = ALL_COLUMNS.filter((c) => !c.optional || showOptional)
 
   return (
     <>
-      <div className="table-actions">
-        <button
-          className="btn-toggle-cols"
+      <Group justify="flex-end" mb="xs">
+        <Button
+          variant="subtle"
+          color="gray"
+          size="xs"
+          style={{ fontFamily: 'var(--mantine-font-family-monospace)', letterSpacing: '0.06em' }}
           onClick={() => setShowOptional((v) => !v)}
         >
           {showOptional ? '▲ Masquer' : '▼ Afficher'} Fibres · Fer · Calcium
-        </button>
-      </div>
-      <div className="table-scroll-wrapper">
-        <table className="nutrition-table">
-          <thead>
-            <tr>
-              {columns.map(({ key, label, unit }) => (
-                <th key={key}>
-                  {label}
-                  {unit && <span className="th-unit">{unit}</span>}
-                </th>
+        </Button>
+      </Group>
+
+      <Box style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 8, overflow: 'hidden' }}>
+        <ScrollArea>
+          <Table style={{ minWidth: 760 }} withRowBorders highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                {columns.map(({ key, label, unit, align }) => (
+                  <Table.Th key={key} style={{ ...thStyle, textAlign: align }}>
+                    {label}
+                    {unit && (
+                      <Text component="span" display="block" fw={400} fz={10} style={{ opacity: 0.6, textTransform: 'none', letterSpacing: 0 }}>
+                        {unit}
+                      </Text>
+                    )}
+                  </Table.Th>
+                ))}
+              </Table.Tr>
+            </Table.Thead>
+
+            <Table.Tbody>
+              {rows.map((row, i) => (
+                <Table.Tr key={i}>
+                  {columns.map(({ key }) => (
+                    <Table.Td key={key} style={tdStyle(key)}>
+                      {fmtCell(key, row[key])}
+                      {key === 'quantite' && row[key] > 0 && (
+                        <Text component="span" fz={11} style={{ opacity: 0.5, marginLeft: 2 }}>g</Text>
+                      )}
+                    </Table.Td>
+                  ))}
+                </Table.Tr>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, i) => (
-              <TableRow key={i} row={row} columns={columns} />
-            ))}
-            <TableRow
-              row={{ ...total, nom: 'Total recette' }}
-              className="row-total"
-              columns={columns}
-            />
-            <TableRow
-              row={perPortion}
-              className="row-portion"
-              columns={columns}
-            />
-          </tbody>
-        </table>
-      </div>
+
+              {/* Total recette */}
+              <Table.Tr style={{ borderTop: '2px solid var(--mantine-color-default-border)', background: 'var(--mantine-color-green-0)' }}>
+                {columns.map(({ key }) => (
+                  <Table.Td key={key} style={{ ...tdStyle(key), fontWeight: 600 }}>
+                    {key === 'nom' ? (
+                      <Text ff="monospace" fz={11} tt="uppercase" c="green" style={{ letterSpacing: '0.1em' }}>
+                        Total recette
+                      </Text>
+                    ) : (
+                      fmtCell(key, total[key])
+                    )}
+                  </Table.Td>
+                ))}
+              </Table.Tr>
+
+              {/* Par portion */}
+              <Table.Tr style={{ background: 'rgba(106, 191, 160, 0.1)' }}>
+                {columns.map(({ key }) => (
+                  <Table.Td key={key} style={tdStyle(key)}>
+                    {key === 'nom' ? (
+                      <Text ff="monospace" fz={11} tt="uppercase" c="teal" style={{ letterSpacing: '0.1em' }}>
+                        {perPortion.nom}
+                      </Text>
+                    ) : (
+                      <>
+                        {fmtCell(key, perPortion[key])}
+                        {key === 'quantite' && perPortion[key] > 0 && (
+                          <Text component="span" fz={11} style={{ opacity: 0.5, marginLeft: 2 }}>g</Text>
+                        )}
+                      </>
+                    )}
+                  </Table.Td>
+                ))}
+              </Table.Tr>
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
+      </Box>
     </>
   )
 }

@@ -1,84 +1,71 @@
-function IngredientCard({ ingredient, onUpdate, onRemove }) {
-  const update = (field) => (e) => onUpdate(ingredient.id, field, e.target.value)
+import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Paper, Text, Grid } from '@mantine/core'
+import { IconTrash, IconPlus } from '@tabler/icons-react'
 
+function IngredientCard({ ingredient, onUpdate, onRemove }) {
   return (
-    <div className="ingredient-card">
-      <div className="ingredient-main-row">
-        <div className="field-group">
-          <label className="field-label" htmlFor={`nom-${ingredient.id}`}>
-            Nom du produit
-          </label>
-          <input
-            id={`nom-${ingredient.id}`}
-            type="text"
-            className="input-text"
+    <Paper withBorder p="sm" mb="xs">
+      <Grid align="flex-end" gutter="sm">
+        <Grid.Col span={{ base: 6, sm: 5 }}>
+          <TextInput
+            label="Nom du produit"
             placeholder="ex : Farine T55"
             value={ingredient.nom}
-            onChange={update('nom')}
+            onChange={(e) => onUpdate(ingredient.id, 'nom', e.target.value)}
           />
-        </div>
-        <div className="field-group">
-          <label className="field-label" htmlFor={`marque-${ingredient.id}`}>
-            Marque
-          </label>
-          <input
-            id={`marque-${ingredient.id}`}
-            type="text"
-            className="input-text"
+        </Grid.Col>
+        <Grid.Col span={{ base: 6, sm: 3 }}>
+          <TextInput
+            label="Marque"
             placeholder="Non précisée"
             value={ingredient.marque}
-            onChange={update('marque')}
-            style={ingredient.marque ? {} : { opacity: 0.6 }}
+            onChange={(e) => onUpdate(ingredient.id, 'marque', e.target.value)}
           />
-        </div>
-        <div className="field-group">
-          <label className="field-label" htmlFor={`qte-${ingredient.id}`}>
-            Quantité totale dans la recette (g)
-          </label>
-          <input
-            id={`qte-${ingredient.id}`}
-            type="number"
-            className="input-number"
+        </Grid.Col>
+        <Grid.Col span={{ base: 10, sm: 3 }}>
+          <NumberInput
+            label="Quantité (g)"
             placeholder="0"
-            min="0"
-            step="1"
+            min={0}
+            suffix=" g"
             value={ingredient.quantite}
-            onChange={update('quantite')}
+            onChange={(val) => onUpdate(ingredient.id, 'quantite', val)}
           />
-        </div>
-        <button
-          className="btn-remove"
-          onClick={() => onRemove(ingredient.id)}
-          title="Supprimer cet ingrédient"
-          aria-label="Supprimer"
-        >
-          ×
-        </button>
-      </div>
-    </div>
+        </Grid.Col>
+        <Grid.Col span={{ base: 2, sm: 1 }} style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            onClick={() => onRemove(ingredient.id)}
+            aria-label="Supprimer cet ingrédient"
+          >
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Grid.Col>
+      </Grid>
+    </Paper>
   )
 }
 
 export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove }) {
   return (
-    <div className="calculateur-zone">
-      <div className="zone-header">
-        <p className="zone-eyebrow">Composition de la recette</p>
-        <div className="portions-control">
-          <label htmlFor="portions">Nombre de portions</label>
-          <input
-            id="portions"
-            type="number"
-            className="input-number"
-            min="1"
-            step="1"
+    <Stack gap="md" p={{ base: 'md', sm: 32 }} style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
+      <Group justify="space-between" wrap="wrap">
+        <Text size="xs" tt="uppercase" ff="monospace" c="green" fw={500} style={{ letterSpacing: '0.12em' }}>
+          Composition de la recette
+        </Text>
+        <Group gap="xs" align="flex-end">
+          <Text size="sm">Nombre de portions</Text>
+          <NumberInput
             value={portions}
-            onChange={(e) => setPortions(e.target.value)}
+            onChange={(val) => setPortions(val || 1)}
+            min={1}
+            step={1}
+            w={70}
           />
-        </div>
-      </div>
+        </Group>
+      </Group>
 
-      <div className="ingredient-list">
+      <Stack gap={0}>
         {ingredients.map((ingredient) => (
           <IngredientCard
             key={ingredient.id}
@@ -87,11 +74,17 @@ export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate
             onRemove={onRemove}
           />
         ))}
-      </div>
+      </Stack>
 
-      <button className="btn-add" onClick={onAdd}>
-        + Ajouter un ingrédient
-      </button>
-    </div>
+      <Button
+        variant="light"
+        color="green"
+        leftSection={<IconPlus size={16} />}
+        onClick={onAdd}
+        w="fit-content"
+      >
+        Ajouter un ingrédient
+      </Button>
+    </Stack>
   )
 }
