@@ -31,8 +31,19 @@ const thStyle = (key) => ({
   padding: '12px 16px',
 })
 
+function per100g(total) {
+  const qte = total.quantite || 0
+  const result = { quantite: 100 }
+  COLUMNS.forEach(({ key }) => {
+    if (key === 'nom' || key === 'quantite') return
+    result[key] = qte > 0 ? (total[key] || 0) / qte * 100 : 0
+  })
+  return result
+}
+
 export function NutritionTable({ rows, total, perPortion }) {
   const [showIngredients, setShowIngredients] = useState(false)
+  const p100 = per100g(total)
 
   return (
     <Box style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 10, overflow: 'hidden' }}>
@@ -69,6 +80,7 @@ export function NutritionTable({ rows, total, perPortion }) {
                       fontSize: 13,
                       padding: '10px 16px',
                       color: 'var(--mantine-color-dimmed)',
+                      textTransform: key === 'nom' ? 'capitalize' : undefined,
                     }}
                   >
                     {fmtCell(key, row[key])}
@@ -86,29 +98,56 @@ export function NutritionTable({ rows, total, perPortion }) {
               </Table.Tr>
             )}
 
-            {/* Total recette — discret */}
-            <Table.Tr style={{ background: 'var(--mantine-color-default-hover)', borderBottom: '1px solid var(--mantine-color-default-border)' }}>
-              {COLUMNS.map(({ key }) => (
-                <Table.Td
-                  key={key}
-                  style={{
-                    textAlign: key === 'nom' ? 'left' : 'right',
-                    fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
-                    fontSize: 13,
-                    padding: '12px 16px',
-                    color: 'var(--mantine-color-dimmed)',
-                  }}
-                >
-                  {key === 'nom' ? (
-                    <Text ff="monospace" fz={11} tt="uppercase" c="dimmed" fw={500} style={{ letterSpacing: '0.1em' }}>
-                      Total recette
-                    </Text>
-                  ) : (
-                    fmtCell(key, total[key])
-                  )}
-                </Table.Td>
-              ))}
-            </Table.Tr>
+            {/* Total recette + Pour 100g — visibles uniquement en mode détail */}
+            {showIngredients && (
+              <Table.Tr style={{ background: 'var(--mantine-color-default-hover)', borderBottom: '1px solid var(--mantine-color-default-border)' }}>
+                {COLUMNS.map(({ key }) => (
+                  <Table.Td
+                    key={key}
+                    style={{
+                      textAlign: key === 'nom' ? 'left' : 'right',
+                      fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
+                      fontSize: 13,
+                      padding: '12px 16px',
+                      color: 'var(--mantine-color-dimmed)',
+                    }}
+                  >
+                    {key === 'nom' ? (
+                      <Text ff="monospace" fz={11} tt="uppercase" c="dimmed" fw={500} style={{ letterSpacing: '0.1em' }}>
+                        Total recette
+                      </Text>
+                    ) : (
+                      fmtCell(key, total[key])
+                    )}
+                  </Table.Td>
+                ))}
+              </Table.Tr>
+            )}
+
+            {showIngredients && (
+              <Table.Tr style={{ background: 'var(--mantine-color-default-hover)', borderBottom: '1px solid var(--mantine-color-default-border)' }}>
+                {COLUMNS.map(({ key }) => (
+                  <Table.Td
+                    key={key}
+                    style={{
+                      textAlign: key === 'nom' ? 'left' : 'right',
+                      fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
+                      fontSize: 13,
+                      padding: '12px 16px',
+                      color: 'var(--mantine-color-dimmed)',
+                    }}
+                  >
+                    {key === 'nom' ? (
+                      <Text ff="monospace" fz={11} tt="uppercase" c="dimmed" fw={500} style={{ letterSpacing: '0.1em' }}>
+                        Pour 100g
+                      </Text>
+                    ) : (
+                      fmtCell(key, p100[key])
+                    )}
+                  </Table.Td>
+                ))}
+              </Table.Tr>
+            )}
 
             {/* Par portion — mis en avant */}
             <Table.Tr style={{ background: 'var(--mantine-color-green-0)' }}>

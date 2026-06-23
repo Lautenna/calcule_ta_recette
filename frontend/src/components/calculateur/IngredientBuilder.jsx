@@ -46,8 +46,8 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
                     >
                       <Box
                         style={{
-                          width: 14,
-                          height: 14,
+                          width: 11,
+                          height: 11,
                           borderRadius: '50%',
                           background: 'var(--mantine-color-dimmed)',
                           display: 'flex',
@@ -57,7 +57,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
                           flexShrink: 0,
                         }}
                       >
-                        <Text fz={9} c="white" fw={700} lh={1}>?</Text>
+                        <Text fz={7} c="white" fw={700} lh={1}>?</Text>
                       </Box>
                     </Tooltip>
                   </Group>
@@ -151,25 +151,24 @@ export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate
 
       {/* Slider portions */}
       <Box>
-        <Group justify="space-between" mb={6}>
-          <Text size="sm" fw={500}>Nombre de portions</Text>
-          <Text size="sm" fw={700} c="green.7">{portions}</Text>
-        </Group>
+        <Text size="sm" fw={500} mb={8}>
+          Nombre de portions :{' '}
+          <Text component="span" fw={700} c="green.7">{portions}</Text>
+        </Text>
         <Slider
           value={portions}
           onChange={setPortions}
           min={1}
           max={15}
           step={1}
-          marks={[
-            { value: 1,  label: '1'  },
-            { value: 5,  label: '5'  },
-            { value: 10, label: '10' },
-            { value: 15, label: '15' },
-          ]}
           color="green"
-          mb={24}
+          label={null}
+          mb={8}
         />
+        <Group justify="space-between">
+          <Text fz={11} c="dimmed">1</Text>
+          <Text fz={11} c="dimmed">15</Text>
+        </Group>
       </Box>
 
       <Stack gap={0}>
