@@ -44,8 +44,10 @@ export function CalculateurPage() {
 
   const onAdd = () => setIngredients((prev) => [...prev, emptyIngredient()])
 
+  // S'il ne reste qu'un ingrédient, la poubelle ne le supprime pas (on garde
+  // toujours une ligne) mais réinitialise tous ses champs. Sinon on l'enlève.
   const onRemove = (id) =>
-    setIngredients((prev) => prev.length === 1 ? prev : prev.filter((i) => i.id !== id))
+    setIngredients((prev) => prev.length === 1 ? [emptyIngredient()] : prev.filter((i) => i.id !== id))
 
   const onUpdate = (id, field, value) =>
     setIngredients((prev) => prev.map((i) => i.id === id ? { ...i, [field]: value } : i))
