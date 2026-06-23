@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Stack, Title, Box, Group, Text } from '@mantine/core'
-import { computeTotals, computePerPortion } from '../../utils/nutrition'
+import { Stack, Title, Box, Text } from '@mantine/core'
+import { computeTotals, computePerPortion, NUTRIENT_KEYS } from '../../utils/nutrition'
 import { IngredientBuilder } from './IngredientBuilder'
 import { NutritionTable } from './NutritionTable'
 import { MacroPieChart } from './MacroPieChart'
@@ -55,6 +55,20 @@ export function CalculateurPage() {
       prev.map((i) => i.id === id ? { ...i, recetteId, nom: recetteNom } : i)
     )
 
+  // Pré-remplit un ingrédient à partir d'un aliment Ciqual (valeurs pour 100g).
+  // Les champs restent ensuite modifiables à la main.
+  const onFillFromCiqual = (id, aliment) =>
+    setIngredients((prev) =>
+      prev.map((i) => {
+        if (i.id !== id) return i
+        const next = { ...i, nom: aliment.nom ?? '' }
+        for (const key of NUTRIENT_KEYS) {
+          next[key] = aliment[key] ?? ''
+        }
+        return next
+      })
+    )
+
   const { rows, total } = computeTotals(ingredients)
   const perPortion = computePerPortion(total, portions)
 
@@ -75,6 +89,7 @@ export function CalculateurPage() {
         onRemove={onRemove}
         onUpdate={onUpdate}
         onSelectRecette={onSelectRecette}
+        onFillFromCiqual={onFillFromCiqual}
       />
 
       <SectionHeader title="Tableau nutritionnel" />

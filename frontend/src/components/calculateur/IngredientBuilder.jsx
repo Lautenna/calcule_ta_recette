@@ -1,13 +1,36 @@
-import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Radio, Box, Slider, Tooltip, Divider, Anchor } from '@mantine/core'
-import { IconTrash, IconPlus, IconQuestionMark, IconChevronDown, IconChevronUp, IconCheck, IconPencil } from '@tabler/icons-react'
+import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Autocomplete, Radio, Box, Slider, Tooltip, Divider, Anchor, Loader } from '@mantine/core'
+import { IconTrash, IconPlus, IconChevronDown, IconChevronUp, IconCheck, IconPencil, IconSearch } from '@tabler/icons-react'
 import { useState } from 'react'
+import { useDebouncedValue } from '@mantine/hooks'
 import { useRecettes } from '../../hooks/useRecettes'
+import { useAliments } from '../../hooks/useAliments'
 
-function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recettesOptions }) {
+function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFillFromCiqual, recettesOptions }) {
   const isRecette = ingredient.type === 'recette'
   const [showExtra, setShowExtra] = useState(false)
   const [validated, setValidated] = useState(false)
   const [errors, setErrors] = useState({})
+
+  // Recherche Ciqual (ANSES) — directement pilotée par le nom saisi dans le champ.
+  const [debouncedSearch] = useDebouncedValue(ingredient.nom ?? '', 250)
+  const { data: alimentsData, isFetching } = useAliments(debouncedSearch)
+  const aliments = alimentsData?.member ?? []
+  // Autocomplete travaille sur des chaînes : on affiche « nom · groupe » et on
+  // retrouve l'aliment d'origine via ce même libellé. dedup pour éviter les clés en double.
+  const labelFor = (a) => (a.groupe ? `${a.nom} · ${a.groupe}` : a.nom)
+  const alimentOptions = [...new Set(aliments.map(labelFor))]
+
+  const handleSelectAliment = (val) => {
+    const found = aliments.find((a) => labelFor(a) === val)
+    if (found) {
+      onFillFromCiqual(ingredient.id, found)
+      clearError('nom')
+      clearError('energie_kcal')
+      clearError('proteines')
+      clearError('glucides')
+      clearError('graisses')
+    }
+  }
 
   const nomAffiche = ingredient.nom || (isRecette ? 'Recette' : 'Ingrédient sans nom')
 
@@ -160,7 +183,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
           </Grid.Col>
         ) : (
           <>
-            <Grid.Col span={{ base: 5, sm: 3 }}>
+            <Grid.Col span={{ base: 5, sm: 2 }}>
               <TextInput
                 label={<Text fz={12} c="dimmed">Marque</Text>}
                 placeholder="Non précisée"
@@ -174,14 +197,33 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
                 }}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 7, sm: 4 }}>
-              <TextInput
-                label="Nom du produit"
+            <Grid.Col span={{ base: 12, sm: 5 }}>
+              <Autocomplete
+                label={
+                  <Group gap={6} align="baseline" wrap="nowrap">
+                    <Text fz={13} fw={500}>Nom du produit</Text>
+                    <Text fz={11} c="dimmed">— recherche base Ciqual (ANSES)</Text>
+                  </Group>
+                }
                 withAsterisk
-                placeholder="ex : Farine T55"
+                placeholder="ex : carotte, farine… ou un nom libre"
+                leftSection={<IconSearch size={15} />}
+                rightSection={isFetching ? <Loader size={14} /> : null}
+                data={alimentOptions}
                 value={ingredient.nom}
                 error={errors.nom}
-                onChange={(e) => { onUpdate(ingredient.id, 'nom', e.target.value); clearError('nom') }}
+                onChange={(val) => {
+                  // Si la valeur correspond exactement à un libellé Ciqual, c'est une
+                  // sélection : on pré-remplit (nom propre + valeurs). Sinon c'est une saisie libre.
+                  if (aliments.some((a) => labelFor(a) === val)) {
+                    handleSelectAliment(val)
+                  } else {
+                    onUpdate(ingredient.id, 'nom', val)
+                    clearError('nom')
+                  }
+                }}
+                filter={({ options }) => options}
+                comboboxProps={{ withinPortal: true }}
               />
             </Grid.Col>
             <Grid.Col span={{ base: 10, sm: 2 }}>
@@ -214,9 +256,14 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
       {!isRecette && (
         <Box mt={10}>
           <Divider mb={8} />
-          <Text fz={11} c="dimmed" mb={6} style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Valeurs nutritionnelles pour 100g
-          </Text>
+          <Group justify="space-between" align="baseline" mb={6}>
+            <Text fz={11} c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              Valeurs nutritionnelles pour 100g
+            </Text>
+            <Text fz={10} c="dimmed">
+              Choisir un aliment Ciqual dans le champ « Nom du produit » pré-remplit ces valeurs (modifiables). · ANSES – Ciqual
+            </Text>
+          </Group>
           <Grid gutter="xs">
             <Grid.Col span={{ base: 6, sm: 3 }}>
               <NumberInput size="xs" label="Énergie (kcal)" min={0} placeholder="0" withAsterisk value={ingredient.energie_kcal || ''} error={errors.energie_kcal} onChange={(val) => { onUpdate(ingredient.id, 'energie_kcal', val); clearError('energie_kcal') }} />
@@ -279,7 +326,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
   )
 }
 
-export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove, onSelectRecette }) {
+export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove, onSelectRecette, onFillFromCiqual }) {
   const { data: recettesData } = useRecettes()
   const recettesOptions = (recettesData?.member ?? []).map((r) => ({
     value: String(r.id),
@@ -322,6 +369,7 @@ export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate
             onUpdate={onUpdate}
             onRemove={onRemove}
             onSelectRecette={onSelectRecette}
+            onFillFromCiqual={onFillFromCiqual}
             recettesOptions={recettesOptions}
           />
         ))}
