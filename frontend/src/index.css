@@ -1,5 +1,6 @@
 body {
   margin: 0;
+  background-color: #F4F8F5;
 }
 
 #root {
@@ -11,4 +12,5 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: var(--mantine-color-body);
 }

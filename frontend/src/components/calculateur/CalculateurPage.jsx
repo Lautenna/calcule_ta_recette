@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Stack, Title, Text, Box } from '@mantine/core'
+import { Stack, Title, Text, Box, Group, NumberInput } from '@mantine/core'
 import { computeTotals, computePerPortion } from '../../utils/nutrition'
 import { IngredientBuilder } from './IngredientBuilder'
 import { NutritionTable } from './NutritionTable'
@@ -19,7 +19,32 @@ function emptyIngredient() {
   }
 }
 
-const sectionStyle = { borderTop: '1px solid var(--mantine-color-default-border)' }
+function SectionHeader({ title, right }) {
+  return (
+    <Box
+      py={10}
+      px={24}
+      style={{
+        background: 'var(--mantine-color-green-0)',
+        borderTop: '1px solid var(--mantine-color-green-1)',
+        borderBottom: '1px solid var(--mantine-color-green-1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+      }}
+    >
+      <Text fz={12} fw={700} tt="uppercase" ff="monospace" c="green.7" style={{ letterSpacing: '0.18em', textAlign: 'center' }}>
+        {title}
+      </Text>
+      {right && (
+        <Box style={{ position: 'absolute', right: 24 }}>
+          {right}
+        </Box>
+      )}
+    </Box>
+  )
+}
 
 export function CalculateurPage() {
   const [portions, setPortions] = useState(4)
@@ -43,8 +68,8 @@ export function CalculateurPage() {
 
   return (
     <Stack gap={0} align="stretch" style={{ textAlign: 'left' }}>
-      <Box p={{ base: 16, sm: 24 }} pb="sm">
-        <Title order={1} fz={{ base: 24, sm: 36 }} fw={500} lts="-1px" mb={4}>
+      <Box p={{ base: 20, sm: 32 }} pb={20} style={{ borderBottom: '3px solid var(--mantine-color-green-4)' }}>
+        <Title order={1} fz={{ base: 28, sm: 44 }} fw={700} lts="-1.5px" mb={6}>
           Calculateur de recettes
         </Title>
         <Text size="sm" c="dimmed">
@@ -52,27 +77,37 @@ export function CalculateurPage() {
         </Text>
       </Box>
 
+      <SectionHeader
+        title="Composition de la recette"
+        right={
+          <Group gap="xs" align="center">
+            <Text size="xs" c="dimmed">Portions</Text>
+            <NumberInput
+              value={portions}
+              onChange={(val) => setPortions(val || 1)}
+              min={1}
+              step={1}
+              w={64}
+              size="xs"
+            />
+          </Group>
+        }
+      />
       <IngredientBuilder
         ingredients={ingredients}
-        portions={portions}
-        setPortions={setPortions}
         onAdd={onAdd}
         onRemove={onRemove}
         onUpdate={onUpdate}
         onSelectRecette={onSelectRecette}
       />
 
-      <Box p={{ base: 16, sm: 24 }} style={sectionStyle}>
-        <Text size="xs" tt="uppercase" ff="monospace" c="green" fw={500} mb="sm" style={{ letterSpacing: '0.12em' }}>
-          Tableau nutritionnel
-        </Text>
+      <SectionHeader title="Tableau nutritionnel" />
+      <Box p={{ base: 16, sm: 24 }}>
         <NutritionTable rows={rows} total={total} perPortion={perPortion} />
       </Box>
 
-      <Box p={{ base: 16, sm: 24 }} style={sectionStyle}>
-        <Text size="xs" tt="uppercase" ff="monospace" c="green" fw={500} mb="sm" style={{ letterSpacing: '0.12em' }}>
-          Répartition des macronutriments par portion
-        </Text>
+      <SectionHeader title="Répartition des macronutriments par portion" />
+      <Box p={{ base: 16, sm: 24 }}>
         <MacroPieChart perPortion={perPortion} />
       </Box>
     </Stack>

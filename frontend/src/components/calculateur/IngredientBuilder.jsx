@@ -1,4 +1,4 @@
-import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, SegmentedControl, Box } from '@mantine/core'
+import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Radio, Box } from '@mantine/core'
 import { IconTrash, IconPlus } from '@tabler/icons-react'
 import { useRecettes } from '../../hooks/useRecettes'
 
@@ -14,50 +14,43 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
         paddingTop: 10,
         paddingBottom: 10,
         paddingRight: 8,
-        background: 'var(--mantine-color-default-hover)',
+        background: 'white',
         borderRadius: '0 6px 6px 0',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}
     >
       <Grid align="flex-end" gutter="sm">
-        <Grid.Col span={12}>
-          <SegmentedControl
-            size="xs"
+        {/* Radio inline */}
+        <Grid.Col span={{ base: 12, sm: 2 }}>
+          <Text fz={11} c="dimmed" mb={4} style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            Type
+          </Text>
+          <Radio.Group
             value={ingredient.type}
             onChange={(val) => onUpdate(ingredient.id, 'type', val)}
-            data={[
-              { value: 'ingredient', label: 'Ingrédient' },
-              { value: 'recette', label: 'Recette enregistrée' },
-            ]}
-          />
+          >
+            <Stack gap={4}>
+              <Radio value="ingredient" label="Ingrédient" size="xs" />
+              <Radio value="recette" label="Recette" size="xs" />
+            </Stack>
+          </Radio.Group>
         </Grid.Col>
 
         {isRecette ? (
-          <>
-            <Grid.Col span={{ base: 10, sm: 8 }}>
-              <Select
-                label="Recette"
-                placeholder="Choisir une recette…"
-                data={recettesOptions}
-                value={ingredient.recetteId ? String(ingredient.recetteId) : null}
-                onChange={(val) => {
-                  const found = recettesOptions.find((r) => r.value === val)
-                  onSelectRecette(ingredient.id, val, found ? found.label : '')
-                }}
-                searchable
-                nothingFoundMessage="Aucune recette trouvée"
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 10, sm: 3 }}>
-              <NumberInput
-                label="Quantité (g)"
-                placeholder="0"
-                min={0}
-                suffix=" g"
-                value={ingredient.quantite}
-                onChange={(val) => onUpdate(ingredient.id, 'quantite', val)}
-              />
-            </Grid.Col>
-          </>
+          <Grid.Col span={{ base: 10, sm: 9 }}>
+            <Select
+              label="Recette enregistrée"
+              placeholder="Choisir une recette…"
+              data={recettesOptions}
+              value={ingredient.recetteId ? String(ingredient.recetteId) : null}
+              onChange={(val) => {
+                const found = recettesOptions.find((r) => r.value === val)
+                onSelectRecette(ingredient.id, val, found ? found.label : '')
+              }}
+              searchable
+              nothingFoundMessage="Aucune recette trouvée"
+            />
+          </Grid.Col>
         ) : (
           <>
             <Grid.Col span={{ base: 5, sm: 3 }}>
@@ -68,7 +61,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
                 onChange={(e) => onUpdate(ingredient.id, 'marque', e.target.value)}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 7, sm: 5 }}>
+            <Grid.Col span={{ base: 7, sm: 4 }}>
               <TextInput
                 label="Nom du produit"
                 placeholder="ex : Farine T55"
@@ -76,7 +69,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
                 onChange={(e) => onUpdate(ingredient.id, 'nom', e.target.value)}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 10, sm: 3 }}>
+            <Grid.Col span={{ base: 10, sm: 2 }}>
               <NumberInput
                 label="Quantité (g)"
                 placeholder="0"
@@ -104,7 +97,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
   )
 }
 
-export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove, onSelectRecette }) {
+export function IngredientBuilder({ ingredients, onUpdate, onAdd, onRemove, onSelectRecette }) {
   const { data: recettesData } = useRecettes()
   const recettesOptions = (recettesData?.member ?? []).map((r) => ({
     value: String(r.id),
@@ -112,23 +105,7 @@ export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate
   }))
 
   return (
-    <Stack gap="sm" p={{ base: 16, sm: 24 }} style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
-      <Group justify="space-between" wrap="wrap">
-        <Text size="xs" tt="uppercase" ff="monospace" c="green" fw={500} style={{ letterSpacing: '0.12em' }}>
-          Composition de la recette
-        </Text>
-        <Group gap="xs" align="flex-end">
-          <Text size="sm" c="dimmed">Portions</Text>
-          <NumberInput
-            value={portions}
-            onChange={(val) => setPortions(val || 1)}
-            min={1}
-            step={1}
-            w={70}
-          />
-        </Group>
-      </Group>
-
+    <Stack gap="sm" p={{ base: 16, sm: 24 }}>
       <Stack gap={0}>
         {ingredients.map((ingredient) => (
           <IngredientCard

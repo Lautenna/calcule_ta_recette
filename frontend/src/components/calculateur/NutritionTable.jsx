@@ -2,17 +2,18 @@ import { useState } from 'react'
 import { Table, ScrollArea, Button, Group, Text, Box } from '@mantine/core'
 import { NUTRIENT_KEYS, NUTRIENT_LABELS, fmt } from '../../utils/nutrition'
 
-const OPTIONAL_KEYS = ['fibres', 'fer', 'calcium']
+const KEY_COLUMNS = ['energie_kcal', 'graisses', 'glucides', 'proteines']
+const DETAIL_KEYS  = ['energie_kj', 'graisses_sat', 'sucres', 'sel', 'fibres', 'fer', 'calcium']
 
 const ALL_COLUMNS = [
-  { key: 'nom',      label: 'Ingrédient', unit: '',   align: 'left',  optional: false },
-  { key: 'quantite', label: 'Qté',         unit: 'g',  align: 'right', optional: false },
+  { key: 'nom',      label: 'Ingrédient', unit: '',  align: 'left',  detail: false },
+  { key: 'quantite', label: 'Qté',         unit: 'g', align: 'right', detail: false },
   ...NUTRIENT_KEYS.map((key) => ({
     key,
     label: NUTRIENT_LABELS[key].label,
     unit:  NUTRIENT_LABELS[key].unit,
     align: 'right',
-    optional: OPTIONAL_KEYS.includes(key),
+    detail: DETAIL_KEYS.includes(key),
   })),
 ]
 
@@ -22,24 +23,27 @@ function fmtCell(key, value) {
   return fmt(value)
 }
 
-const thStyle = {
+const thStyle = (key) => ({
   fontFamily: 'var(--mantine-font-family-monospace)',
   fontSize: 10,
   letterSpacing: '0.07em',
   textTransform: 'uppercase',
   whiteSpace: 'nowrap',
   background: 'var(--mantine-color-default-hover)',
-}
+  color: KEY_COLUMNS.includes(key) ? 'var(--mantine-color-green-7)' : undefined,
+  fontWeight: KEY_COLUMNS.includes(key) ? 700 : 500,
+})
 
 const tdStyle = (key) => ({
   textAlign: key === 'nom' ? 'left' : 'right',
   fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
   fontSize: key !== 'nom' ? 13 : 14,
+  fontWeight: KEY_COLUMNS.includes(key) ? 600 : undefined,
 })
 
 export function NutritionTable({ rows, total, perPortion }) {
-  const [showOptional, setShowOptional] = useState(false)
-  const columns = ALL_COLUMNS.filter((c) => !c.optional || showOptional)
+  const [showDetail, setShowDetail] = useState(false)
+  const columns = ALL_COLUMNS.filter((c) => !c.detail || showDetail)
 
   return (
     <>
@@ -49,19 +53,19 @@ export function NutritionTable({ rows, total, perPortion }) {
           color="gray"
           size="xs"
           style={{ fontFamily: 'var(--mantine-font-family-monospace)', letterSpacing: '0.06em' }}
-          onClick={() => setShowOptional((v) => !v)}
+          onClick={() => setShowDetail((v) => !v)}
         >
-          {showOptional ? '▲ Masquer' : '▼ Afficher'} Fibres · Fer · Calcium
+          {showDetail ? '▲ Réduire' : '▼ Détails'} · kJ · graisses sat. · sucres · sel · fibres · fer · calcium
         </Button>
       </Group>
 
       <Box style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 8, overflow: 'hidden' }}>
         <ScrollArea>
-          <Table style={{ minWidth: 760 }} withRowBorders highlightOnHover>
+          <Table style={{ minWidth: 600 }} withRowBorders highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 {columns.map(({ key, label, unit, align }) => (
-                  <Table.Th key={key} style={{ ...thStyle, textAlign: align }}>
+                  <Table.Th key={key} style={{ ...thStyle(key), textAlign: align }}>
                     {label}
                     {unit && (
                       <Text component="span" display="block" fw={400} fz={10} style={{ opacity: 0.6, textTransform: 'none', letterSpacing: 0 }}>
@@ -84,12 +88,11 @@ export function NutritionTable({ rows, total, perPortion }) {
                 </Table.Tr>
               ))}
 
-              {/* Total recette */}
               <Table.Tr style={{ borderTop: '2px solid var(--mantine-color-default-border)', background: 'var(--mantine-color-green-0)' }}>
                 {columns.map(({ key }) => (
-                  <Table.Td key={key} style={{ ...tdStyle(key), fontWeight: 600 }}>
+                  <Table.Td key={key} style={{ ...tdStyle(key), fontWeight: 700 }}>
                     {key === 'nom' ? (
-                      <Text ff="monospace" fz={11} tt="uppercase" c="green" style={{ letterSpacing: '0.1em' }}>
+                      <Text ff="monospace" fz={11} tt="uppercase" c="green.7" style={{ letterSpacing: '0.1em' }}>
                         Total recette
                       </Text>
                     ) : (
@@ -99,8 +102,7 @@ export function NutritionTable({ rows, total, perPortion }) {
                 ))}
               </Table.Tr>
 
-              {/* Par portion */}
-              <Table.Tr style={{ background: 'rgba(106, 191, 160, 0.1)' }}>
+              <Table.Tr style={{ background: 'rgba(106, 191, 160, 0.12)' }}>
                 {columns.map(({ key }) => (
                   <Table.Td key={key} style={tdStyle(key)}>
                     {key === 'nom' ? (

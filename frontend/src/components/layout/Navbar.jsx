@@ -11,6 +11,7 @@ export function Navbar() {
   return (
     <header style={{
       borderBottom: '1px solid var(--mantine-color-default-border)',
+      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
       padding: '0 24px',
       display: 'flex',
       alignItems: 'center',
