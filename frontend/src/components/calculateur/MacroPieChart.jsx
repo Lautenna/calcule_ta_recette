@@ -17,7 +17,7 @@ export function MacroPieChart({ perPortion }) {
   const C = 2 * Math.PI * RADIUS
 
   const slices = [
-    { label: 'Lipides',   cal: lipCal, color: '#3D8B65', grams: perPortion.graisses  || 0 },
+    { label: 'Lipides',   cal: lipCal, color: '#E8B931', grams: perPortion.graisses  || 0 },
     { label: 'Glucides',  cal: gluCal, color: '#6ABFA0', grams: perPortion.glucides   || 0 },
     { label: 'Protéines', cal: proCal, color: '#C8845A', grams: perPortion.proteines  || 0 },
   ]
