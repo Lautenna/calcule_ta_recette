@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Stack, Title, Text, Box, Group, NumberInput } from '@mantine/core'
+import { Stack, Title, Box, Group, NumberInput, Text } from '@mantine/core'
 import { computeTotals, computePerPortion } from '../../utils/nutrition'
 import { IngredientBuilder } from './IngredientBuilder'
 import { NutritionTable } from './NutritionTable'
@@ -22,7 +22,7 @@ function emptyIngredient() {
 function SectionHeader({ title, right }) {
   return (
     <Box
-      py={10}
+      py={14}
       px={24}
       style={{
         background: 'var(--mantine-color-green-0)',
@@ -34,7 +34,7 @@ function SectionHeader({ title, right }) {
         position: 'relative',
       }}
     >
-      <Text fz={12} fw={700} tt="uppercase" ff="monospace" c="green.7" style={{ letterSpacing: '0.18em', textAlign: 'center' }}>
+      <Text fz={16} fw={700} tt="uppercase" ff="monospace" c="green.7" style={{ letterSpacing: '0.15em', textAlign: 'center' }}>
         {title}
       </Text>
       {right && (
@@ -69,26 +69,23 @@ export function CalculateurPage() {
   return (
     <Stack gap={0} align="stretch" style={{ textAlign: 'left' }}>
       <Box p={{ base: 20, sm: 32 }} pb={20} style={{ borderBottom: '3px solid var(--mantine-color-green-4)' }}>
-        <Title order={1} fz={{ base: 28, sm: 44 }} fw={700} lts="-1.5px" mb={6}>
-          Calculateur de recettes
+        <Title order={1} fz={{ base: 28, sm: 44 }} fw={700} lts="-1.5px">
+          Calculer les valeurs nutritionnelles
         </Title>
-        <Text size="sm" c="dimmed">
-          Saisissez vos ingrédients et leurs valeurs nutritionnelles pour obtenir le récapitulatif complet de votre recette.
-        </Text>
       </Box>
 
       <SectionHeader
         title="Composition de la recette"
         right={
-          <Group gap="xs" align="center">
-            <Text size="xs" c="dimmed">Portions</Text>
+          <Group gap="sm" align="center">
+            <Text size="sm" c="dimmed" fw={500}>Portions</Text>
             <NumberInput
               value={portions}
               onChange={(val) => setPortions(val || 1)}
               min={1}
               step={1}
-              w={64}
-              size="xs"
+              w={80}
+              size="sm"
             />
           </Group>
         }

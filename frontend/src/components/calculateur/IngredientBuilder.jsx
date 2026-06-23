@@ -106,6 +106,9 @@ export function IngredientBuilder({ ingredients, onUpdate, onAdd, onRemove, onSe
 
   return (
     <Stack gap="sm" p={{ base: 16, sm: 24 }}>
+      <Text size="sm" c="dimmed">
+        Saisissez vos ingrédients et leurs valeurs nutritionnelles pour obtenir le récapitulatif complet de votre recette.
+      </Text>
       <Stack gap={0}>
         {ingredients.map((ingredient) => (
           <IngredientCard
