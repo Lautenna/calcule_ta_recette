@@ -8,6 +8,8 @@ import { MacroPieChart } from './MacroPieChart'
 function emptyIngredient() {
   return {
     id: crypto.randomUUID(),
+    type: 'ingredient',
+    recetteId: null,
     nom: '', marque: '', quantite: '',
     energie_kcal: '', energie_kj: '',
     graisses: '', graisses_sat: '',
@@ -31,13 +33,18 @@ export function CalculateurPage() {
   const onUpdate = (id, field, value) =>
     setIngredients((prev) => prev.map((i) => i.id === id ? { ...i, [field]: value } : i))
 
+  const onSelectRecette = (id, recetteId, recetteNom) =>
+    setIngredients((prev) =>
+      prev.map((i) => i.id === id ? { ...i, recetteId, nom: recetteNom } : i)
+    )
+
   const { rows, total } = computeTotals(ingredients)
   const perPortion = computePerPortion(total, portions)
 
   return (
     <Stack gap={0} align="stretch" style={{ textAlign: 'left' }}>
-      <Box p={32} pb="md">
-        <Title order={1} fz={{ base: 28, sm: 40 }} fw={500} lts="-1.2px" mb={6}>
+      <Box p={{ base: 16, sm: 24 }} pb="sm">
+        <Title order={1} fz={{ base: 24, sm: 36 }} fw={500} lts="-1px" mb={4}>
           Calculateur de recettes
         </Title>
         <Text size="sm" c="dimmed">
@@ -52,17 +59,18 @@ export function CalculateurPage() {
         onAdd={onAdd}
         onRemove={onRemove}
         onUpdate={onUpdate}
+        onSelectRecette={onSelectRecette}
       />
 
-      <Box p={{ base: 'md', sm: 32 }} style={sectionStyle}>
-        <Text size="xs" tt="uppercase" ff="monospace" c="green" fw={500} mb="md" style={{ letterSpacing: '0.12em' }}>
+      <Box p={{ base: 16, sm: 24 }} style={sectionStyle}>
+        <Text size="xs" tt="uppercase" ff="monospace" c="green" fw={500} mb="sm" style={{ letterSpacing: '0.12em' }}>
           Tableau nutritionnel
         </Text>
         <NutritionTable rows={rows} total={total} perPortion={perPortion} />
       </Box>
 
-      <Box p={{ base: 'md', sm: 32 }} style={sectionStyle}>
-        <Text size="xs" tt="uppercase" ff="monospace" c="green" fw={500} mb="md" style={{ letterSpacing: '0.12em' }}>
+      <Box p={{ base: 16, sm: 24 }} style={sectionStyle}>
+        <Text size="xs" tt="uppercase" ff="monospace" c="green" fw={500} mb="sm" style={{ letterSpacing: '0.12em' }}>
           Répartition des macronutriments par portion
         </Text>
         <MacroPieChart perPortion={perPortion} />

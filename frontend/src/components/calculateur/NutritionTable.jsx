@@ -79,9 +79,6 @@ export function NutritionTable({ rows, total, perPortion }) {
                   {columns.map(({ key }) => (
                     <Table.Td key={key} style={tdStyle(key)}>
                       {fmtCell(key, row[key])}
-                      {key === 'quantite' && row[key] > 0 && (
-                        <Text component="span" fz={11} style={{ opacity: 0.5, marginLeft: 2 }}>g</Text>
-                      )}
                     </Table.Td>
                   ))}
                 </Table.Tr>
@@ -111,12 +108,7 @@ export function NutritionTable({ rows, total, perPortion }) {
                         {perPortion.nom}
                       </Text>
                     ) : (
-                      <>
-                        {fmtCell(key, perPortion[key])}
-                        {key === 'quantite' && perPortion[key] > 0 && (
-                          <Text component="span" fz={11} style={{ opacity: 0.5, marginLeft: 2 }}>g</Text>
-                        )}
-                      </>
+                      fmtCell(key, perPortion[key])
                     )}
                   </Table.Td>
                 ))}
