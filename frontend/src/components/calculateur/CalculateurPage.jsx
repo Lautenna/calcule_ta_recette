@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Stack, Title, Box, Group, NumberInput, Text } from '@mantine/core'
+import { Stack, Title, Box, Group, Text } from '@mantine/core'
 import { computeTotals, computePerPortion } from '../../utils/nutrition'
 import { IngredientBuilder } from './IngredientBuilder'
 import { NutritionTable } from './NutritionTable'
@@ -19,7 +19,7 @@ function emptyIngredient() {
   }
 }
 
-function SectionHeader({ title, right }) {
+function SectionHeader({ title }) {
   return (
     <Box
       py={14}
@@ -28,20 +28,12 @@ function SectionHeader({ title, right }) {
         background: 'var(--mantine-color-green-0)',
         borderTop: '1px solid var(--mantine-color-green-1)',
         borderBottom: '1px solid var(--mantine-color-green-1)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
+        textAlign: 'center',
       }}
     >
-      <Text fz={16} fw={700} tt="uppercase" ff="monospace" c="green.7" style={{ letterSpacing: '0.15em', textAlign: 'center' }}>
+      <Text fz={16} fw={700} tt="uppercase" ff="monospace" c="green.7" style={{ letterSpacing: '0.15em' }}>
         {title}
       </Text>
-      {right && (
-        <Box style={{ position: 'absolute', right: 24 }}>
-          {right}
-        </Box>
-      )}
     </Box>
   )
 }
@@ -67,31 +59,18 @@ export function CalculateurPage() {
   const perPortion = computePerPortion(total, portions)
 
   return (
-    <Stack gap={0} align="stretch" style={{ textAlign: 'left' }}>
-      <Box p={{ base: 20, sm: 32 }} pb={20} style={{ borderBottom: '3px solid var(--mantine-color-green-4)' }}>
-        <Title order={1} fz={{ base: 28, sm: 44 }} fw={700} lts="-1.5px">
+    <Stack gap={0} align="stretch">
+      <Box p={{ base: 20, sm: 32 }} pb={20} style={{ borderBottom: '3px solid var(--mantine-color-green-4)', textAlign: 'center' }}>
+        <Title order={1} fz={{ base: 26, sm: 42 }} fw={700} lts="-1.5px">
           Calculer les valeurs nutritionnelles
         </Title>
       </Box>
 
-      <SectionHeader
-        title="Composition de la recette"
-        right={
-          <Group gap="sm" align="center">
-            <Text size="sm" c="dimmed" fw={500}>Portions</Text>
-            <NumberInput
-              value={portions}
-              onChange={(val) => setPortions(val || 1)}
-              min={1}
-              step={1}
-              w={80}
-              size="sm"
-            />
-          </Group>
-        }
-      />
+      <SectionHeader title="Composition de la recette" />
       <IngredientBuilder
         ingredients={ingredients}
+        portions={portions}
+        setPortions={setPortions}
         onAdd={onAdd}
         onRemove={onRemove}
         onUpdate={onUpdate}

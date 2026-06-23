@@ -92,22 +92,25 @@ export function MacroPieChart({ perPortion }) {
       </Box>
 
       <Stack gap="lg">
-        {isEmpty ? (
-          <Text size="sm" c="dimmed" ta="center" maw={150} lh={1.5}>
-            Entrez des valeurs nutritionnelles pour voir la répartition
+        {segments.map((seg) => {
+          const pct = totalCal > 0 ? Math.round((seg.cal / totalCal) * 100) : 0
+          return (
+            <Group key={seg.label} gap="md" align="center" wrap="nowrap">
+              <Box w={14} h={14} style={{ borderRadius: '50%', background: seg.color, flexShrink: 0, opacity: isEmpty ? 0.3 : 1 }} />
+              <Text c={isEmpty ? 'dimmed' : undefined} style={{ flex: 1, minWidth: 80 }}>{seg.label}</Text>
+              <Text ff="monospace" size="xs" c="dimmed">
+                {isEmpty ? '—' : `${seg.grams.toFixed(1)} g`}
+              </Text>
+              <Text ff="monospace" fz={20} fw={600} miw={56} ta="right" c={isEmpty ? 'dimmed' : undefined}>
+                {isEmpty ? '—' : <>{pct}&thinsp;%</>}
+              </Text>
+            </Group>
+          )
+        })}
+        {isEmpty && (
+          <Text size="xs" c="dimmed" ta="center" lh={1.5}>
+            Entrez des valeurs nutritionnelles<br />pour voir la répartition
           </Text>
-        ) : (
-          segments.map((seg) => {
-            const pct = totalCal > 0 ? Math.round((seg.cal / totalCal) * 100) : 0
-            return (
-              <Group key={seg.label} gap="md" align="center" wrap="nowrap">
-                <Box w={12} h={12} style={{ borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
-                <Text c="dimmed" style={{ flex: 1, minWidth: 80 }}>{seg.label}</Text>
-                <Text ff="monospace" size="xs" c="dimmed">{seg.grams.toFixed(1)} g</Text>
-                <Text ff="monospace" fz={20} fw={600} miw={56} ta="right">{pct}&thinsp;%</Text>
-              </Group>
-            )
-          })
         )}
       </Stack>
     </Group>

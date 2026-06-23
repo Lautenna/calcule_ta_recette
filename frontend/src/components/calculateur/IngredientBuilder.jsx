@@ -1,5 +1,5 @@
-import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Radio, Box } from '@mantine/core'
-import { IconTrash, IconPlus } from '@tabler/icons-react'
+import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Radio, Box, Slider, Tooltip } from '@mantine/core'
+import { IconTrash, IconPlus, IconQuestionMark } from '@tabler/icons-react'
 import { useRecettes } from '../../hooks/useRecettes'
 
 function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recettesOptions }) {
@@ -20,7 +20,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
       }}
     >
       <Grid align="flex-end" gutter="sm">
-        {/* Radio inline */}
+        {/* Radio type */}
         <Grid.Col span={{ base: 12, sm: 2 }}>
           <Text fz={11} c="dimmed" mb={4} style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
             Type
@@ -31,7 +31,38 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
           >
             <Stack gap={4}>
               <Radio value="ingredient" label="Ingrédient" size="xs" />
-              <Radio value="recette" label="Recette" size="xs" />
+              <Radio
+                value="recette"
+                size="xs"
+                label={
+                  <Group gap={4} align="center" wrap="nowrap">
+                    <Text size="xs">Recette</Text>
+                    <Tooltip
+                      label="Pour utiliser une recette existante comme ingrédient, un compte est nécessaire."
+                      withArrow
+                      multiline
+                      maw={220}
+                      position="right"
+                    >
+                      <Box
+                        style={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: '50%',
+                          background: 'var(--mantine-color-dimmed)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'help',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Text fz={9} c="white" fw={700} lh={1}>?</Text>
+                      </Box>
+                    </Tooltip>
+                  </Group>
+                }
+              />
             </Stack>
           </Radio.Group>
         </Grid.Col>
@@ -55,15 +86,22 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
           <>
             <Grid.Col span={{ base: 5, sm: 3 }}>
               <TextInput
-                label="Marque"
+                label={<Text fz={12} c="dimmed">Marque</Text>}
                 placeholder="Non précisée"
                 value={ingredient.marque}
                 onChange={(e) => onUpdate(ingredient.id, 'marque', e.target.value)}
+                styles={{
+                  input: {
+                    color: 'var(--mantine-color-dimmed)',
+                    background: 'var(--mantine-color-gray-0)',
+                  },
+                }}
               />
             </Grid.Col>
             <Grid.Col span={{ base: 7, sm: 4 }}>
               <TextInput
                 label="Nom du produit"
+                withAsterisk
                 placeholder="ex : Farine T55"
                 value={ingredient.nom}
                 onChange={(e) => onUpdate(ingredient.id, 'nom', e.target.value)}
@@ -71,7 +109,8 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
             </Grid.Col>
             <Grid.Col span={{ base: 10, sm: 2 }}>
               <NumberInput
-                label="Quantité (g)"
+                label="Quantité"
+                withAsterisk
                 placeholder="0"
                 min={0}
                 suffix=" g"
@@ -97,7 +136,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, recet
   )
 }
 
-export function IngredientBuilder({ ingredients, onUpdate, onAdd, onRemove, onSelectRecette }) {
+export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove, onSelectRecette }) {
   const { data: recettesData } = useRecettes()
   const recettesOptions = (recettesData?.member ?? []).map((r) => ({
     value: String(r.id),
@@ -105,10 +144,34 @@ export function IngredientBuilder({ ingredients, onUpdate, onAdd, onRemove, onSe
   }))
 
   return (
-    <Stack gap="sm" p={{ base: 16, sm: 24 }}>
+    <Stack gap="md" p={{ base: 16, sm: 24 }}>
       <Text size="sm" c="dimmed">
         Saisissez vos ingrédients et leurs valeurs nutritionnelles pour obtenir le récapitulatif complet de votre recette.
       </Text>
+
+      {/* Slider portions */}
+      <Box>
+        <Group justify="space-between" mb={6}>
+          <Text size="sm" fw={500}>Nombre de portions</Text>
+          <Text size="sm" fw={700} c="green.7">{portions}</Text>
+        </Group>
+        <Slider
+          value={portions}
+          onChange={setPortions}
+          min={1}
+          max={15}
+          step={1}
+          marks={[
+            { value: 1,  label: '1'  },
+            { value: 5,  label: '5'  },
+            { value: 10, label: '10' },
+            { value: 15, label: '15' },
+          ]}
+          color="green"
+          mb={24}
+        />
+      </Box>
+
       <Stack gap={0}>
         {ingredients.map((ingredient) => (
           <IngredientCard
