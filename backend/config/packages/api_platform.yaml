@@ -1,0 +1,12 @@
+api_platform:
+    title: 'Calculateur Recette API'
+    version: '1.0.0'
+    formats:
+        jsonld: ['application/ld+json']
+        json:   ['application/json']
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
+    serializer:
+        hydra_prefix: false
