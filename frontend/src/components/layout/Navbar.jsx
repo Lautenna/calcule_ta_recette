@@ -4,6 +4,7 @@ import { Group, Text } from '@mantine/core'
 const links = [
   { to: '/accueil', label: 'Accueil' },
   { to: '/calculateur', label: 'Calculateur' },
+  { to: '/metabolisme', label: 'Métabolisme de base' },
   { to: '/profil', label: 'Profil' },
 ]
 

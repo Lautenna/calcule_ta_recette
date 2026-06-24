@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Stack, Title, Box, Text } from '@mantine/core'
+import { Stack, Title, Box, Text, ThemeIcon } from '@mantine/core'
+import { IconChefHat } from '@tabler/icons-react'
 import { computeTotals, computePerPortion, NUTRIENT_KEYS } from '../../utils/nutrition'
 import { IngredientBuilder } from './IngredientBuilder'
 import { NutritionTable } from './NutritionTable'
@@ -76,10 +77,25 @@ export function CalculateurPage() {
 
   return (
     <Stack gap={0} align="stretch">
-      <Box p={{ base: 20, sm: 32 }} pb={20} style={{ borderBottom: '3px solid var(--mantine-color-green-4)', textAlign: 'center' }}>
+      <Box
+        p={{ base: 24, sm: 40 }}
+        style={{
+          borderBottom: '3px solid var(--mantine-color-green-4)',
+          textAlign: 'center',
+          background: 'linear-gradient(180deg, var(--mantine-color-green-0) 0%, transparent 100%)',
+        }}
+      >
+        <ThemeIcon size={56} radius="xl" variant="light" color="green" mb={12}>
+          <IconChefHat size={30} />
+        </ThemeIcon>
         <Title order={1} fz={{ base: 26, sm: 42 }} fw={700} lts="-1.5px">
           Calculer les valeurs nutritionnelles
         </Title>
+        <Text c="dimmed" size="md" mt={10} maw={620} mx="auto" style={{ lineHeight: 1.6 }}>
+          Composez votre recette ingrédient par ingrédient et obtenez aussitôt
+          son tableau nutritionnel complet ainsi que la répartition des
+          macronutriments, par portion comme pour 100&nbsp;g.
+        </Text>
       </Box>
 
       <SectionHeader title="Composition de la recette" />

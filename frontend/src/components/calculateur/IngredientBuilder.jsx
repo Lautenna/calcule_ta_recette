@@ -199,14 +199,10 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             </Grid.Col>
             <Grid.Col span={{ base: 12, sm: 5 }}>
               <Autocomplete
-                label={
-                  <Group gap={6} align="baseline" wrap="nowrap">
-                    <Text fz={13} fw={500}>Nom du produit</Text>
-                    <Text fz={11} c="dimmed">— recherche base Ciqual (ANSES)</Text>
-                  </Group>
-                }
+                label="Nom du produit"
+                description="Recherche dans la base Ciqual (ANSES) — ou saisie libre"
                 withAsterisk
-                placeholder="ex : carotte, farine… ou un nom libre"
+                placeholder="ex : carotte, farine…"
                 leftSection={<IconSearch size={15} />}
                 rightSection={isFetching ? <Loader size={14} /> : null}
                 data={alimentOptions}
@@ -228,11 +224,13 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             </Grid.Col>
             <Grid.Col span={{ base: 10, sm: 2 }}>
               <NumberInput
-                label="Quantité"
+                label="Quantité (g/ml)"
+                labelProps={{ style: { whiteSpace: 'nowrap' } }}
                 withAsterisk
                 placeholder="0"
                 min={0}
-                suffix=" g"
+                stepHoldDelay={500}
+                stepHoldInterval={(count) => Math.max(1000 / (count + 1), 50)}
                 value={ingredient.quantite}
                 error={errors.quantite}
                 onChange={(val) => { onUpdate(ingredient.id, 'quantite', val); clearError('quantite') }}
@@ -256,14 +254,9 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
       {!isRecette && (
         <Box mt={10}>
           <Divider mb={8} />
-          <Group justify="space-between" align="baseline" mb={6}>
-            <Text fz={11} c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-              Valeurs nutritionnelles pour 100g
-            </Text>
-            <Text fz={10} c="dimmed">
-              Choisir un aliment Ciqual dans le champ « Nom du produit » pré-remplit ces valeurs (modifiables). · ANSES – Ciqual
-            </Text>
-          </Group>
+          <Text fz={11} c="dimmed" mb={6} style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+            Valeurs nutritionnelles pour 100g
+          </Text>
           <Grid gutter="xs">
             <Grid.Col span={{ base: 6, sm: 3 }}>
               <NumberInput size="xs" label="Énergie (kcal)" min={0} placeholder="0" withAsterisk value={ingredient.energie_kcal || ''} error={errors.energie_kcal} onChange={(val) => { onUpdate(ingredient.id, 'energie_kcal', val); clearError('energie_kcal') }} />
