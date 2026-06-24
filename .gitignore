@@ -19,3 +19,6 @@ frontend/.env.*.local
 .vscode/
 *.DS_Store
 *.swp
+
+# Artefacts Playwright MCP (tests navigateur)
+.playwright-mcp/

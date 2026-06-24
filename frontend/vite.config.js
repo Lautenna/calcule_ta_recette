@@ -13,6 +13,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      // Sert les photos de profil uploadées (public/uploads/... côté Symfony)
+      '/uploads': {
+        target: 'https://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })
