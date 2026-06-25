@@ -124,6 +124,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $confirmationExpiresAt = null;
 
+    /**
+     * Jeton aléatoire envoyé par mail pour réinitialiser le mot de passe.
+     * Effacé une fois le mot de passe changé. Jamais exposé via l'API.
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $resetToken = null;
+
+    /**
+     * Date limite de validité du jeton de réinitialisation (1 h).
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $resetExpiresAt = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
@@ -276,6 +289,44 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->confirmationExpiresAt !== null
             && $this->confirmationExpiresAt > new \DateTimeImmutable();
+    }
+
+    public function getResetToken(): ?string
+    {
+        return $this->resetToken;
+    }
+
+    public function getResetExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->resetExpiresAt;
+    }
+
+    /**
+     * Démarre (ou relance) une réinitialisation de mot de passe :
+     * génère un nouveau jeton valable 1 h.
+     */
+    public function startPasswordReset(): void
+    {
+        $this->resetToken = bin2hex(random_bytes(32));
+        $this->resetExpiresAt = (new \DateTimeImmutable())->modify('+1 hour');
+    }
+
+    /**
+     * Efface le jeton de réinitialisation (usage unique, après changement réussi).
+     */
+    public function clearPasswordReset(): void
+    {
+        $this->resetToken = null;
+        $this->resetExpiresAt = null;
+    }
+
+    /**
+     * Le jeton de réinitialisation est-il encore valable (non expiré) ?
+     */
+    public function isResetTokenValid(): bool
+    {
+        return $this->resetExpiresAt !== null
+            && $this->resetExpiresAt > new \DateTimeImmutable();
     }
 
     /**

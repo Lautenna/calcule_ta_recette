@@ -73,6 +73,22 @@ export function AuthProvider({ children }) {
     })
   }, [])
 
+  // Demande un email de réinitialisation de mot de passe (réponse neutre côté serveur).
+  const forgotPassword = useCallback(async (email) => {
+    return apiFetch('/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+  }, [])
+
+  // Enregistre un nouveau mot de passe à partir du jeton reçu par mail (page /reset-password).
+  const resetPassword = useCallback(async (token, plainPassword) => {
+    return apiFetch('/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, plainPassword }),
+    })
+  }, [])
+
   const logout = useCallback(() => {
     clearToken()
     setUser(null)
@@ -105,6 +121,8 @@ export function AuthProvider({ children }) {
     register,
     confirmEmail,
     resendConfirmation,
+    forgotPassword,
+    resetPassword,
     logout,
     uploadPhoto,
     updateProfile,

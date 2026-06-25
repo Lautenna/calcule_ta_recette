@@ -108,6 +108,16 @@ export function LoginPage() {
               Se connecter
             </Button>
 
+            <Anchor
+              c="dimmed"
+              size="sm"
+              ta="center"
+              style={{ cursor: 'pointer' }}
+              onClick={() => navigate('/forgot-password', { state: { email: form.getValues().email } })}
+            >
+              Mot de passe oublié ?
+            </Anchor>
+
             <Text size="sm" c="dimmed" ta="center">
               Pas encore de compte ?{' '}
               <Anchor
