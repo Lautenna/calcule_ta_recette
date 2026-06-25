@@ -7,11 +7,15 @@ import {
 import { useAuth } from '../context/AuthContext'
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { login, resendConfirmation } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [error, setError] = useState(null)
+  // Vrai quand l'échec vient d'un email non confirmé → on propose le renvoi.
+  const [unverified, setUnverified] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
 
   const redirectTo = location.state?.from?.pathname || '/profil'
 
@@ -25,14 +29,32 @@ export function LoginPage() {
 
   const handleSubmit = async (values) => {
     setError(null)
+    setUnverified(false)
+    setResent(false)
     setLoading(true)
     try {
       await login(values.email, values.password)
       navigate(redirectTo, { replace: true })
     } catch (err) {
-      setError(err.message || 'Connexion impossible.')
+      const msg = err.message || 'Connexion impossible.'
+      setError(msg)
+      // Le UserChecker renvoie un message contenant « confirmée » si l'email
+      // n'est pas validé : on propose alors de renvoyer le lien.
+      if (/confirm/i.test(msg)) setUnverified(true)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    setResending(true)
+    try {
+      await resendConfirmation(form.values.email)
+      setResent(true)
+    } catch {
+      setResent(true)
+    } finally {
+      setResending(false)
     }
   }
 
@@ -46,7 +68,28 @@ export function LoginPage() {
               <Text c="dimmed" size="sm">Content de te revoir 👋</Text>
             </Stack>
 
-            {error && <Alert color="red" variant="light">{error}</Alert>}
+            {error && (
+              <Alert color={unverified ? 'yellow' : 'red'} variant="light">
+                <Stack gap={8}>
+                  <Text size="sm">{error}</Text>
+                  {unverified && !resent && (
+                    <Button
+                      variant="white"
+                      color="green"
+                      size="xs"
+                      loading={resending}
+                      onClick={handleResend}
+                      w="fit-content"
+                    >
+                      Renvoyer l'email de confirmation
+                    </Button>
+                  )}
+                  {resent && (
+                    <Text size="sm" c="green.7">Nouveau lien envoyé — vérifie ta boîte mail.</Text>
+                  )}
+                </Stack>
+              </Alert>
+            )}
 
             <TextInput
               label="Email"

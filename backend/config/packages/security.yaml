@@ -20,6 +20,8 @@ security:
         login:
             pattern: ^/api/login
             stateless: true
+            # Refuse la connexion tant que l'email n'est pas confirmé
+            user_checker: App\Security\UserChecker
             json_login:
                 check_path: /api/login
                 username_path: email

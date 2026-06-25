@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react'
 import {
-  Stack, Title, Text, Paper, Avatar, Group, Button, TextInput, PasswordInput,
-  Divider, FileButton,
+  Stack, Title, Text, Avatar, Group, Button, TextInput, PasswordInput,
+  FileButton, Box, Modal, ActionIcon, Divider, Tooltip,
 } from '@mantine/core'
+import { IconSettings } from '@tabler/icons-react'
 import { useForm } from '@mantine/form'
 import { notifications } from '@mantine/notifications'
 import { useAuth } from '../context/AuthContext'
+import { MesIngredients } from '../components/profil/MesIngredients'
+import { MesRecettes } from '../components/profil/MesRecettes'
 
 export function ProfilPage() {
   const { user, updateProfile, uploadPhoto, logout } = useAuth()
@@ -13,6 +16,8 @@ export function ProfilPage() {
   const [savingPwd, setSavingPwd] = useState(false)
   const [uploading, setUploading] = useState(false)
   const resetRef = useRef(null)
+
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const infosForm = useForm({
     initialValues: { pseudo: user?.pseudo ?? '', email: user?.email ?? '' },
@@ -83,65 +88,105 @@ export function ProfilPage() {
   if (!user) return null
 
   return (
-    <Stack p={32} gap="lg" maw={560}>
-      <Title order={1} fz={32} fw={500} lts="-1px">Mon profil</Title>
-
-      {/* Photo de profil */}
-      <Paper withBorder radius="md" p="lg">
-        <Group>
-          <Avatar src={user.photoProfil || null} size={72} radius="md" color="green">
-            {user.pseudo?.charAt(0).toUpperCase()}
-          </Avatar>
-          <Stack gap={4} style={{ flex: 1 }}>
-            <Text fw={600} fz="lg">{user.pseudo}</Text>
-            <Text c="dimmed" size="sm">{user.email}</Text>
-          </Stack>
-          <FileButton
-            resetRef={resetRef}
-            onChange={handlePhoto}
-            accept="image/png,image/jpeg,image/webp,image/gif"
+    <Stack gap={0} align="stretch">
+      {/* En-tête profil — compact, avec accès aux réglages via la roue crantée */}
+      <Box
+        pos="relative"
+        p={{ base: 24, sm: 32 }}
+        style={{
+          borderBottom: '3px solid var(--mantine-color-green-4)',
+          textAlign: 'center',
+          background: 'linear-gradient(180deg, var(--mantine-color-green-0) 0%, transparent 100%)',
+        }}
+      >
+        <Tooltip label="Paramètres du compte" withArrow position="left">
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="lg"
+            radius="xl"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Paramètres du compte"
+            style={{ position: 'absolute', top: 16, right: 16 }}
           >
-            {(props) => (
-              <Button {...props} variant="light" color="green" loading={uploading}>
-                Changer la photo
-              </Button>
-            )}
-          </FileButton>
+            <IconSettings size={22} />
+          </ActionIcon>
+        </Tooltip>
+
+        <Group justify="center" gap="md" wrap="nowrap">
+          <Avatar
+            src={user.photoProfil || null}
+            size={64}
+            radius={64}
+            color="green"
+            style={{ border: '3px solid var(--mantine-color-green-3)' }}
+          >
+            <Text fz={24} fw={700}>{user.pseudo?.charAt(0).toUpperCase()}</Text>
+          </Avatar>
+          <Box style={{ textAlign: 'left' }}>
+            <Title order={1} fz={{ base: 22, sm: 28 }} fw={700} lts="-0.5px">{user.pseudo}</Title>
+            <FileButton
+              resetRef={resetRef}
+              onChange={handlePhoto}
+              accept="image/png,image/jpeg,image/webp,image/gif"
+            >
+              {(props) => (
+                <Button {...props} variant="subtle" color="green" size="compact-xs" loading={uploading}>
+                  Changer la photo
+                </Button>
+              )}
+            </FileButton>
+          </Box>
         </Group>
-      </Paper>
+      </Box>
 
-      {/* Infos */}
-      <Paper withBorder radius="md" p="lg">
-        <form onSubmit={infosForm.onSubmit(handleInfos)}>
-          <Stack gap="md">
-            <Text fw={600}>Informations</Text>
-            <TextInput label="Pseudo" {...infosForm.getInputProps('pseudo')} />
-            <TextInput label="Email" {...infosForm.getInputProps('email')} />
-            <Group justify="flex-end">
-              <Button type="submit" color="green" loading={savingInfos}>Enregistrer</Button>
-            </Group>
-          </Stack>
-        </form>
-      </Paper>
+      {/* Contenu principal : recettes & ingrédients mis en avant */}
+      <Box p={{ base: 16, sm: 32 }}>
+        <Stack gap="xl" maw={840} mx="auto">
+          <MesRecettes />
+          <MesIngredients />
+        </Stack>
+      </Box>
 
-      {/* Mot de passe */}
-      <Paper withBorder radius="md" p="lg">
-        <form onSubmit={pwdForm.onSubmit(handlePassword)}>
-          <Stack gap="md">
-            <Text fw={600}>Changer le mot de passe</Text>
-            <PasswordInput label="Nouveau mot de passe" {...pwdForm.getInputProps('plainPassword')} />
-            <PasswordInput label="Confirmer" {...pwdForm.getInputProps('confirm')} />
-            <Group justify="flex-end">
-              <Button type="submit" color="green" loading={savingPwd}>Modifier</Button>
-            </Group>
-          </Stack>
-        </form>
-      </Paper>
+      {/* Réglages du compte — derrière la roue crantée */}
+      <Modal
+        opened={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        title="Paramètres du compte"
+        centered
+      >
+        <Stack gap="lg">
+          <form onSubmit={infosForm.onSubmit(handleInfos)}>
+            <Stack gap="sm">
+              <Text fw={600} fz="sm">Informations</Text>
+              <TextInput label="Pseudo" {...infosForm.getInputProps('pseudo')} />
+              <TextInput label="Email" {...infosForm.getInputProps('email')} />
+              <Group justify="flex-end">
+                <Button type="submit" color="green" loading={savingInfos}>Enregistrer</Button>
+              </Group>
+            </Stack>
+          </form>
 
-      <Divider />
-      <Group justify="flex-end">
-        <Button variant="subtle" color="red" onClick={logout}>Se déconnecter</Button>
-      </Group>
+          <Divider />
+
+          <form onSubmit={pwdForm.onSubmit(handlePassword)}>
+            <Stack gap="sm">
+              <Text fw={600} fz="sm">Changer le mot de passe</Text>
+              <PasswordInput label="Nouveau mot de passe" {...pwdForm.getInputProps('plainPassword')} />
+              <PasswordInput label="Confirmer" {...pwdForm.getInputProps('confirm')} />
+              <Group justify="flex-end">
+                <Button type="submit" color="green" loading={savingPwd}>Modifier</Button>
+              </Group>
+            </Stack>
+          </form>
+
+          <Divider />
+
+          <Group justify="flex-end">
+            <Button variant="subtle" color="red" onClick={logout}>Se déconnecter</Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Stack>
   )
 }

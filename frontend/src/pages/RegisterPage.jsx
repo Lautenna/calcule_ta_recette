@@ -1,18 +1,61 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useForm } from '@mantine/form'
 import {
   Paper, Stack, Title, Text, TextInput, PasswordInput, Button, Anchor, Alert,
-  FileInput, Avatar, Group,
+  ThemeIcon, Group,
 } from '@mantine/core'
+import { IconMailCheck } from '@tabler/icons-react'
 import { useAuth } from '../context/AuthContext'
 
+// Écran affiché après une inscription réussie : invite à confirmer l'email.
+function VerifierEmail({ email, onResend, resending, resent }) {
+  return (
+    <Stack align="center" pt={48} px="md" pb={48}>
+      <Paper withBorder shadow="sm" radius="md" p={32} w="100%" maw={440}>
+        <Stack gap="md" align="center" ta="center">
+          <ThemeIcon size={56} radius="xl" variant="light" color="green">
+            <IconMailCheck size={30} />
+          </ThemeIcon>
+          <Title order={1} fz={24} fw={600} lts="-0.5px">Vérifie ta boîte mail</Title>
+          <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
+            On vient d'envoyer un lien de confirmation à <strong>{email}</strong>.
+            Clique dessus pour activer ton compte, puis connecte-toi. Pense à
+            regarder dans les spams.
+          </Text>
+
+          {resent ? (
+            <Alert color="green" variant="light" w="100%">
+              Si un compte non confirmé existe pour cet email, un nouveau lien vient d'être envoyé.
+            </Alert>
+          ) : (
+            <Button
+              variant="subtle"
+              color="green"
+              size="sm"
+              loading={resending}
+              onClick={onResend}
+            >
+              Renvoyer l'email
+            </Button>
+          )}
+
+          <Text size="sm" c="dimmed">
+            <Anchor component={Link} to="/login" c="green">Aller à la connexion</Anchor>
+          </Text>
+        </Stack>
+      </Paper>
+    </Stack>
+  )
+}
+
 export function RegisterPage() {
-  const { register, uploadPhoto } = useAuth()
-  const navigate = useNavigate()
+  const { register, resendConfirmation } = useAuth()
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [photo, setPhoto] = useState(null)
+  const [registeredEmail, setRegisteredEmail] = useState(null)
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
 
   const form = useForm({
     initialValues: { email: '', pseudo: '', plainPassword: '', confirm: '', codeInvitation: '' },
@@ -26,9 +69,6 @@ export function RegisterPage() {
     },
   })
 
-  // Aperçu local de la photo sélectionnée.
-  const photoPreview = photo ? URL.createObjectURL(photo) : null
-
   const handleSubmit = async (values) => {
     setError(null)
     setLoading(true)
@@ -39,11 +79,7 @@ export function RegisterPage() {
         plainPassword: values.plainPassword,
         codeInvitation: values.codeInvitation,
       })
-      // Photo optionnelle : envoyée seulement si fournie (après connexion auto).
-      if (photo) {
-        await uploadPhoto(photo)
-      }
-      navigate('/profil', { replace: true })
+      setRegisteredEmail(values.email)
     } catch (err) {
       // Remonte les violations de validation du serveur sur les champs.
       if (err.violations?.length) {
@@ -55,6 +91,30 @@ export function RegisterPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleResend = async () => {
+    setResending(true)
+    try {
+      await resendConfirmation(registeredEmail)
+      setResent(true)
+    } catch {
+      setResent(true) // réponse neutre : on confirme l'envoi dans tous les cas
+    } finally {
+      setResending(false)
+    }
+  }
+
+  // Inscription faite : on bascule sur l'écran « vérifie ta boîte mail ».
+  if (registeredEmail) {
+    return (
+      <VerifierEmail
+        email={registeredEmail}
+        onResend={handleResend}
+        resending={resending}
+        resent={resent}
+      />
+    )
   }
 
   return (
@@ -86,22 +146,13 @@ export function RegisterPage() {
               {...form.getInputProps('codeInvitation')}
             />
 
-            <Group align="flex-end" gap="md" wrap="nowrap">
-              <Avatar src={photoPreview} radius="md" size={54} color="green" />
-              <FileInput
-                label="Photo de profil (optionnel)"
-                placeholder="Choisir une image"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                value={photo}
-                onChange={setPhoto}
-                clearable
-                style={{ flex: 1 }}
-              />
-            </Group>
-
             <Button type="submit" color="green" loading={loading} fullWidth mt="xs">
               Créer mon compte
             </Button>
+
+            <Text size="sm" c="dimmed" ta="center">
+              Tu pourras ajouter une photo de profil après confirmation, depuis ton profil.
+            </Text>
 
             <Text size="sm" c="dimmed" ta="center">
               Déjà un compte ?{' '}

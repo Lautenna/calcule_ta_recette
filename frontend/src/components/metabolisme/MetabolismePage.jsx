@@ -52,7 +52,7 @@ export function MetabolismePage() {
         <ThemeIcon size={56} radius="xl" variant="light" color="green" mb={12}>
           <IconFlame size={30} />
         </ThemeIcon>
-        <Title order={1} fz={{ base: 28, sm: 44 }} fw={700} lts="-1.5px">
+        <Title order={1} fz={{ base: 28, sm: 44 }} fw={600} lts="-0.5px">
           Métabolisme de base
         </Title>
         <Text c="dimmed" size="md" mt={10} maw={620} mx="auto" style={{ lineHeight: 1.6 }}>
@@ -142,7 +142,13 @@ export function MetabolismePage() {
               {mb !== null ? (
                 <>
                   <Group gap={8} align="baseline" justify="center">
-                    <Text fz={{ base: 48, sm: 64 }} fw={800} c="green.8" lts="-2px" lh={1}>
+                    <Text
+                      fz={{ base: 52, sm: 72 }}
+                      fw={600}
+                      c="honey.7"
+                      lh={1}
+                      style={{ fontFamily: 'var(--mantine-font-family-headings)' }}
+                    >
                       {Math.round(mb)}
                     </Text>
                   </Group>

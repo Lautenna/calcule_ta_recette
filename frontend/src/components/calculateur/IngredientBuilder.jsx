@@ -1,35 +1,71 @@
 import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Autocomplete, Radio, Box, Slider, Tooltip, Divider, Anchor, Loader } from '@mantine/core'
-import { IconTrash, IconPlus, IconChevronDown, IconChevronUp, IconCheck, IconPencil, IconSearch } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconChevronDown, IconChevronUp, IconCheck, IconPencil, IconSearch, IconStar, IconStarFilled } from '@tabler/icons-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDebouncedValue } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
 import { useRecettes } from '../../hooks/useRecettes'
+import { useIngredients, useSaveIngredient } from '../../hooks/useIngredients'
 import { useAliments } from '../../hooks/useAliments'
+import { useAuth } from '../../context/AuthContext'
+import { recipePer100g } from '../../utils/nutrition'
 
-function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFillFromCiqual, recettesOptions }) {
+const PERSO_PREFIX = '⭐ '
+
+function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFillFromCiqual, onFillFromIngredient, recettes, mesIngredients, canSave, onSaveIngredient, onRequireLogin }) {
   const isRecette = ingredient.type === 'recette'
   const [showExtra, setShowExtra] = useState(false)
-  const [validated, setValidated] = useState(false)
+  const [validated, setValidated] = useState(ingredient._validated ?? false)
   const [errors, setErrors] = useState({})
+  const [saving, setSaving] = useState(false)
+  const [savedNow, setSavedNow] = useState(false)
 
   // Recherche Ciqual (ANSES) — directement pilotée par le nom saisi dans le champ.
   const [debouncedSearch] = useDebouncedValue(ingredient.nom ?? '', 250)
   const { data: alimentsData, isFetching } = useAliments(debouncedSearch)
   const aliments = alimentsData?.member ?? []
+
+  // Options « Mes ingrédients » filtrées côté client sur le terme saisi.
+  const term = (ingredient.nom ?? '').trim().toLowerCase()
+  const persoMatches = term.length >= 1
+    ? mesIngredients.filter((i) => i.nom.toLowerCase().includes(term))
+    : mesIngredients
+  const persoLabel = (i) => `${PERSO_PREFIX}${i.nom}${i.marque ? ` (${i.marque})` : ''}`
+
   // Autocomplete travaille sur des chaînes : on affiche « nom · groupe » et on
   // retrouve l'aliment d'origine via ce même libellé. dedup pour éviter les clés en double.
   const labelFor = (a) => (a.groupe ? `${a.nom} · ${a.groupe}` : a.nom)
-  const alimentOptions = [...new Set(aliments.map(labelFor))]
+  const ciqualOptions = [...new Set(aliments.map(labelFor))]
 
-  const handleSelectAliment = (val) => {
-    const found = aliments.find((a) => labelFor(a) === val)
-    if (found) {
-      onFillFromCiqual(ingredient.id, found)
-      clearError('nom')
-      clearError('energie_kcal')
-      clearError('proteines')
-      clearError('glucides')
-      clearError('graisses')
+  // Données groupées : mes ingrédients d'abord, puis la base Ciqual.
+  const autocompleteData = []
+  if (persoMatches.length) {
+    autocompleteData.push({ group: '⭐ Mes ingrédients', items: [...new Set(persoMatches.map(persoLabel))] })
+  }
+  if (ciqualOptions.length) {
+    autocompleteData.push({ group: 'Base Ciqual (ANSES)', items: ciqualOptions })
+  }
+
+  const handleSelect = (val) => {
+    // Ingrédient personnel ?
+    if (val.startsWith(PERSO_PREFIX)) {
+      const found = persoMatches.find((i) => persoLabel(i) === val)
+      if (found) {
+        onFillFromIngredient(ingredient.id, found)
+        clearError('nom'); clearError('energie_kcal'); clearError('proteines'); clearError('glucides'); clearError('graisses')
+        return
+      }
     }
+    // Aliment Ciqual ?
+    const aliment = aliments.find((a) => labelFor(a) === val)
+    if (aliment) {
+      onFillFromCiqual(ingredient.id, aliment)
+      clearError('nom'); clearError('energie_kcal'); clearError('proteines'); clearError('glucides'); clearError('graisses')
+      return
+    }
+    // Sinon saisie libre.
+    onUpdate(ingredient.id, 'nom', val)
+    clearError('nom')
   }
 
   const nomAffiche = ingredient.nom || (isRecette ? 'Recette' : 'Ingrédient sans nom')
@@ -40,6 +76,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
     const errs = {}
     if (isRecette) {
       if (!ingredient.recetteId) errs.recetteId = 'Choisissez une recette'
+      if (isEmpty(ingredient.quantite)) errs.quantite = 'Quantité obligatoire'
     } else {
       if (isEmpty(ingredient.nom)) errs.nom = 'Nom obligatoire'
       if (isEmpty(ingredient.quantite)) errs.quantite = 'Quantité obligatoire'
@@ -58,6 +95,29 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
     delete next[field]
     return next
   })
+
+  const handleSaveToProfile = async () => {
+    // Pas connectée : on propose la connexion plutôt que d'enregistrer.
+    if (!canSave) {
+      onRequireLogin()
+      return
+    }
+    setSaving(true)
+    try {
+      await onSaveIngredient(ingredient)
+      setSavedNow(true)
+      notifications.show({ color: 'green', message: `« ${ingredient.nom} » ajouté à vos ingrédients.` })
+    } catch (err) {
+      notifications.show({ color: 'red', message: err.message || "Échec de l'enregistrement." })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Bouton « enregistrer dans mon profil » : ingrédient saisi à la main,
+  // ni issu de Ciqual (déjà dans la base) ni d'un ingrédient déjà enregistré.
+  // Visible même déconnectée (clic → connexion).
+  const peutEnregistrer = !isRecette && !ingredient.sourceIngredientId && !ingredient.sourceCiqual
 
   // Vue repliée une fois l'ingrédient validé
   if (validated) {
@@ -80,13 +140,26 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             <Group gap={6} wrap="nowrap" align="baseline">
               <IconCheck size={14} color="var(--mantine-color-green-6)" style={{ flexShrink: 0 }} />
               <Text fw={600} fz="sm" truncate>{nomAffiche}</Text>
+              {isRecette && <Text fz={11} c="green.7" fw={600} style={{ flexShrink: 0 }}>· recette</Text>}
               {ingredient.marque && <Text fz={11} c="dimmed" truncate>· {ingredient.marque}</Text>}
               <Text fz={11} c="dimmed" style={{ flexShrink: 0 }}>· {ingredient.quantite || 0} g</Text>
             </Group>
-            {!isRecette && (
-              <Text fz={11} c="dimmed" mt={2}>
-                Pour 100g : {ingredient.energie_kcal || 0} kcal · P {ingredient.proteines || 0} g · G {ingredient.glucides || 0} g · L {ingredient.graisses || 0} g
-              </Text>
+            <Text fz={11} c="dimmed" mt={2}>
+              Pour 100g : {ingredient.energie_kcal || 0} kcal · P {ingredient.proteines || 0} g · G {ingredient.glucides || 0} g · L {ingredient.graisses || 0} g
+            </Text>
+            {peutEnregistrer && (
+              <Button
+                size="compact-xs"
+                mt={6}
+                variant={savedNow ? 'light' : 'filled'}
+                color={savedNow ? 'green' : 'yellow'}
+                loading={saving}
+                disabled={savedNow}
+                leftSection={savedNow ? <IconStarFilled size={13} /> : <IconStar size={13} />}
+                onClick={handleSaveToProfile}
+              >
+                {savedNow ? 'Enregistré dans mes ingrédients' : 'Enregistrer dans mes ingrédients'}
+              </Button>
             )}
           </Box>
           <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
@@ -135,7 +208,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
                   <Group gap={4} align="center" wrap="nowrap">
                     <Text size="xs">Recette</Text>
                     <Tooltip
-                      label="Pour utiliser une recette existante comme ingrédient, un compte est nécessaire."
+                      label="Utilisez une de vos recettes enregistrées comme ingrédient : indiquez la quantité en grammes."
                       withArrow
                       multiline
                       maw={220}
@@ -165,22 +238,36 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
         </Grid.Col>
 
         {isRecette ? (
-          <Grid.Col span={{ base: 10, sm: 9 }}>
-            <Select
-              label="Recette enregistrée"
-              placeholder="Choisir une recette…"
-              data={recettesOptions}
-              value={ingredient.recetteId ? String(ingredient.recetteId) : null}
-              error={errors.recetteId}
-              onChange={(val) => {
-                const found = recettesOptions.find((r) => r.value === val)
-                onSelectRecette(ingredient.id, val, found ? found.label : '')
-                clearError('recetteId')
-              }}
-              searchable
-              nothingFoundMessage="Aucune recette trouvée"
-            />
-          </Grid.Col>
+          <>
+            <Grid.Col span={{ base: 10, sm: 7 }}>
+              <Select
+                label="Recette enregistrée"
+                placeholder="Choisir une recette…"
+                data={recettes.map((r) => ({ value: String(r.id), label: r.nom }))}
+                value={ingredient.recetteId ? String(ingredient.recetteId) : null}
+                error={errors.recetteId}
+                onChange={(val) => {
+                  const recette = recettes.find((r) => String(r.id) === val) ?? null
+                  onSelectRecette(ingredient.id, recette, recette ? recipePer100g(recette.composition) : null)
+                  clearError('recetteId')
+                }}
+                searchable
+                nothingFoundMessage="Aucune recette trouvée"
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 10, sm: 2 }}>
+              <NumberInput
+                label="Quantité (g)"
+                labelProps={{ style: { whiteSpace: 'nowrap' } }}
+                withAsterisk
+                placeholder="0"
+                min={0}
+                value={ingredient.quantite}
+                error={errors.quantite}
+                onChange={(val) => { onUpdate(ingredient.id, 'quantite', val); clearError('quantite') }}
+              />
+            </Grid.Col>
+          </>
         ) : (
           <>
             <Grid.Col span={{ base: 5, sm: 2 }}>
@@ -200,24 +287,15 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             <Grid.Col span={{ base: 12, sm: 5 }}>
               <Autocomplete
                 label="Nom du produit"
-                description="Recherche dans la base Ciqual (ANSES) — ou saisie libre"
+                description="Vos ingrédients enregistrés et la base Ciqual (ANSES) — ou saisie libre"
                 withAsterisk
                 placeholder="ex : carotte, farine…"
                 leftSection={<IconSearch size={15} />}
                 rightSection={isFetching ? <Loader size={14} /> : null}
-                data={alimentOptions}
+                data={autocompleteData}
                 value={ingredient.nom}
                 error={errors.nom}
-                onChange={(val) => {
-                  // Si la valeur correspond exactement à un libellé Ciqual, c'est une
-                  // sélection : on pré-remplit (nom propre + valeurs). Sinon c'est une saisie libre.
-                  if (aliments.some((a) => labelFor(a) === val)) {
-                    handleSelectAliment(val)
-                  } else {
-                    onUpdate(ingredient.id, 'nom', val)
-                    clearError('nom')
-                  }
-                }}
+                onChange={handleSelect}
                 filter={({ options }) => options}
                 comboboxProps={{ withinPortal: true }}
               />
@@ -250,6 +328,12 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
           </ActionIcon>
         </Grid.Col>
       </Grid>
+
+      {isRecette && ingredient.recetteId && (
+        <Text fz={11} c="dimmed" mt={8}>
+          Profil calculé pour 100 g : {Math.round(ingredient.energie_kcal || 0)} kcal · P {Math.round(ingredient.proteines || 0)} g · G {Math.round(ingredient.glucides || 0)} g · L {Math.round(ingredient.graisses || 0)} g
+        </Text>
+      )}
 
       {!isRecette && (
         <Box mt={10}>
@@ -319,17 +403,25 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
   )
 }
 
-export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove, onSelectRecette, onFillFromCiqual }) {
+export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove, onSelectRecette, onFillFromCiqual, onFillFromIngredient }) {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const { data: recettesData } = useRecettes()
-  const recettesOptions = (recettesData?.member ?? []).map((r) => ({
-    value: String(r.id),
-    label: r.nom,
-  }))
+  const { data: ingredientsData } = useIngredients()
+  const saveIngredient = useSaveIngredient()
+
+  const recettes = recettesData?.member ?? []
+  const mesIngredients = ingredientsData?.member ?? []
+
+  const onSaveIngredient = (ingredient) => saveIngredient.mutateAsync(ingredient)
+  const onRequireLogin = () => navigate('/login', { state: { from: { pathname: '/calculateur' } } })
 
   return (
     <Stack gap="md" p={{ base: 16, sm: 24 }}>
       <Text size="sm" c="dimmed">
         Saisissez vos ingrédients et leurs valeurs nutritionnelles pour obtenir le récapitulatif complet de votre recette.
+        {' Après avoir cliqué sur « Valider », un bouton ⭐ « Enregistrer dans mes ingrédients » apparaît pour le garder en mémoire'}
+        {isAuthenticated ? '.' : ' (une connexion vous sera proposée).'}
       </Text>
 
       {/* Slider portions */}
@@ -363,7 +455,12 @@ export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate
             onRemove={onRemove}
             onSelectRecette={onSelectRecette}
             onFillFromCiqual={onFillFromCiqual}
-            recettesOptions={recettesOptions}
+            onFillFromIngredient={onFillFromIngredient}
+            recettes={recettes}
+            mesIngredients={mesIngredients}
+            canSave={isAuthenticated}
+            onSaveIngredient={onSaveIngredient}
+            onRequireLogin={onRequireLogin}
           />
         ))}
       </Stack>

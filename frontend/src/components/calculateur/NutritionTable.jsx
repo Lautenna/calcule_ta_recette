@@ -83,7 +83,16 @@ export function NutritionTable({ rows, total, perPortion }) {
                       textTransform: key === 'nom' ? 'capitalize' : undefined,
                     }}
                   >
-                    {fmtCell(key, row[key])}
+                    {key === 'nom' ? (
+                      <>
+                        {row.nom || '—'}
+                        {row.isRecette && (
+                          <Text component="span" c="green.7" fw={600} fz={11} style={{ textTransform: 'none' }}> (recette)</Text>
+                        )}
+                      </>
+                    ) : (
+                      fmtCell(key, row[key])
+                    )}
                   </Table.Td>
                 ))}
               </Table.Tr>

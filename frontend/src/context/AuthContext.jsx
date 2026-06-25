@@ -48,14 +48,30 @@ export function AuthProvider({ children }) {
     return fetchMe()
   }, [fetchMe])
 
+  // Inscription : crée le compte (non confirmé) et déclenche l'envoi de l'email.
+  // Pas de connexion automatique — l'utilisateur doit d'abord confirmer son email.
   const register = useCallback(async ({ email, pseudo, plainPassword, codeInvitation }) => {
-    await apiFetch('/users', {
+    return apiFetch('/users', {
       method: 'POST',
       body: JSON.stringify({ email, pseudo, plainPassword, codeInvitation }),
     })
-    // Connexion automatique dans la foulée.
-    return login(email, plainPassword)
-  }, [login])
+  }, [])
+
+  // Valide le jeton reçu par mail (page /confirmation).
+  const confirmEmail = useCallback(async (token) => {
+    return apiFetch('/confirm-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    })
+  }, [])
+
+  // Renvoie un email de confirmation (réponse neutre côté serveur).
+  const resendConfirmation = useCallback(async (email) => {
+    return apiFetch('/resend-confirmation', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+  }, [])
 
   const logout = useCallback(() => {
     clearToken()
@@ -87,6 +103,8 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(user),
     login,
     register,
+    confirmEmail,
+    resendConfirmation,
     logout,
     uploadPhoto,
     updateProfile,

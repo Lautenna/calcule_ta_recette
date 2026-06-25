@@ -19,7 +19,7 @@ export const NUTRIENT_LABELS = {
 
 export function computeRow(ingredient) {
   const q = parseFloat(ingredient.quantite) || 0
-  const row = { nom: ingredient.nom, quantite: q }
+  const row = { nom: ingredient.nom, quantite: q, isRecette: ingredient.type === 'recette' }
   for (const key of NUTRIENT_KEYS) {
     row[key] = ((parseFloat(ingredient[key]) || 0) * q) / 100
   }
@@ -41,6 +41,23 @@ export function computePerPortion(total, portions) {
   const n = Math.max(1, parseInt(portions) || 1)
   const out = { nom: 'PAR PORTION', quantite: total.quantite / n }
   for (const key of NUTRIENT_KEYS) out[key] = total[key] / n
+  return out
+}
+
+/**
+ * Profil nutritionnel pour 100g d'une recette enregistrée, calculé depuis sa
+ * composition (tableau d'ingrédients façon calculateur). Permet de réutiliser
+ * une recette comme un ingrédient, en grammes. Renvoie null si poids total nul.
+ */
+export function recipePer100g(composition) {
+  if (!Array.isArray(composition) || composition.length === 0) return null
+  const { total } = computeTotals(composition)
+  if (!total.quantite) return null
+  const out = {}
+  for (const key of NUTRIENT_KEYS) {
+    // Arrondi à 2 décimales (valeurs pour 100 g de la recette).
+    out[key] = Math.round((total[key] / total.quantite) * 100 * 100) / 100
+  }
   return out
 }
 

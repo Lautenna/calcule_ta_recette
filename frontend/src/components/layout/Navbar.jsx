@@ -1,5 +1,6 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
-import { Group, Text, Avatar, Menu, Button, UnstyledButton } from '@mantine/core'
+import { Group, Text, Avatar, Menu, Button, UnstyledButton, ThemeIcon } from '@mantine/core'
+import { IconChefHat } from '@tabler/icons-react'
 import { useAuth } from '../../context/AuthContext'
 
 const links = [
@@ -19,33 +20,43 @@ export function Navbar() {
 
   return (
     <header style={{
-      borderBottom: '1px solid var(--mantine-color-default-border)',
-      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
-      padding: '0 24px',
+      borderBottom: '3px solid var(--mantine-color-green-4)',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
+      padding: '0 28px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      height: 48,
+      height: 68,
       position: 'sticky',
       top: 0,
       background: 'var(--mantine-color-body)',
       zIndex: 100,
     }}>
-      <Text ff="monospace" fw={700} fz={12} tt="uppercase" c="green" style={{ letterSpacing: '0.15em' }}>
-        Recettes
-      </Text>
+      {/* Logo de marque — cliquable, ramène à l'accueil */}
+      <UnstyledButton
+        component={Link}
+        to="/accueil"
+        style={{ display: 'flex', alignItems: 'center', gap: 12 }}
+      >
+        <ThemeIcon size={40} radius="xl" variant="light" color="green">
+          <IconChefHat size={24} />
+        </ThemeIcon>
+        <Text ff="monospace" fw={700} fz={20} tt="uppercase" c="green.7" style={{ letterSpacing: '0.12em' }}>
+          Calculateur recette
+        </Text>
+      </UnstyledButton>
 
-      <Group gap={2}>
+      <Group gap={6}>
         {links.map(({ to, label }) => (
           <NavLink
             key={to}
             to={to}
             style={({ isActive }) => ({
-              padding: '5px 12px',
-              borderRadius: 6,
+              padding: '9px 18px',
+              borderRadius: 8,
               textDecoration: 'none',
-              fontSize: 13,
-              fontWeight: isActive ? 600 : 400,
+              fontSize: 15,
+              fontWeight: isActive ? 700 : 500,
               color: isActive
                 ? 'var(--mantine-color-green-7)'
                 : 'var(--mantine-color-dimmed)',
@@ -59,11 +70,11 @@ export function Navbar() {
         {isAuthenticated ? (
           <Menu shadow="md" width={180} position="bottom-end">
             <Menu.Target>
-              <UnstyledButton style={{ marginLeft: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Avatar src={user.photoProfil || null} size={28} radius="xl" color="green">
+              <UnstyledButton style={{ marginLeft: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Avatar src={user.photoProfil || null} size={36} radius="xl" color="green">
                   {user.pseudo?.charAt(0).toUpperCase()}
                 </Avatar>
-                <Text fz={13} fw={500}>{user.pseudo}</Text>
+                <Text fz={15} fw={600}>{user.pseudo}</Text>
               </UnstyledButton>
             </Menu.Target>
             <Menu.Dropdown>
@@ -76,10 +87,10 @@ export function Navbar() {
           <Button
             component={Link}
             to="/login"
-            size="xs"
+            size="sm"
             variant="light"
             color="green"
-            ml={8}
+            ml={12}
           >
             Connexion
           </Button>

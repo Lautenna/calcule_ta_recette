@@ -1,6 +1,9 @@
 body {
   margin: 0;
-  background-color: #F4F8F5;
+  /* Blanc-papier chaud — esprit fiche de cuisine plutôt que clinique */
+  background-color: #F7F5EF;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 #root {

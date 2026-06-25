@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import {
-  Stack, Title, Box, Text, ThemeIcon, Paper, SimpleGrid, Button, Group, Anchor,
+  Stack, Title, Box, Text, ThemeIcon, Paper, SimpleGrid, Button, Anchor, Flex,
 } from '@mantine/core'
-import { IconChefHat, IconFlame, IconArrowRight } from '@tabler/icons-react'
+import { IconChefHat, IconFlame, IconArrowRight, IconArrowDown } from '@tabler/icons-react'
 import { useAuth } from '../context/AuthContext'
 
 // Accès au compte présenté de façon discrète, sous le texte d'intro.
@@ -47,6 +47,31 @@ function SectionHeader({ title }) {
   )
 }
 
+// Une étape de la frise « Comment ça marche ? ».
+function Etape({ num, titre, description }) {
+  return (
+    <Stack gap={8} align="center" style={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
+      <ThemeIcon size={40} radius="xl" variant="filled" color="green">
+        <Text fw={700} fz={16}>{num}</Text>
+      </ThemeIcon>
+      <Text fw={600}>{titre}</Text>
+      <Text c="dimmed" size="sm" style={{ lineHeight: 1.5 }}>
+        {description}
+      </Text>
+    </Stack>
+  )
+}
+
+// Flèche de liaison entre deux étapes : horizontale sur desktop, vers le bas sur mobile.
+function FlecheEtape() {
+  return (
+    <Box c="green.4" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <Box hiddenFrom="sm"><IconArrowDown size={26} /></Box>
+      <Box visibleFrom="sm" style={{ paddingTop: 20 }}><IconArrowRight size={28} /></Box>
+    </Box>
+  )
+}
+
 function OutilCard({ icon, titre, description, to, cta }) {
   return (
     <Paper withBorder radius="md" p={{ base: 20, sm: 28 }} h="100%" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -83,7 +108,7 @@ export function AccueilPage() {
           background: 'linear-gradient(180deg, var(--mantine-color-green-0) 0%, transparent 100%)',
         }}
       >
-        <Title order={1} fz={{ base: 30, sm: 48 }} fw={700} lts="-1.5px">
+        <Title order={1} fz={{ base: 32, sm: 52 }} fw={600} lts="-0.5px">
           Bienvenue 👋
         </Title>
         <Text c="dimmed" size="lg" mt={12} maw={640} mx="auto" style={{ lineHeight: 1.6 }}>
@@ -92,6 +117,35 @@ export function AccueilPage() {
           énergétiques, simplement, sans rien installer.
         </Text>
         <ConnexionAccueil />
+      </Box>
+
+      <SectionHeader title="Comment ça marche ?" />
+      <Box p={{ base: 20, sm: 32 }}>
+        <Flex
+          direction={{ base: 'column', sm: 'row' }}
+          align={{ base: 'stretch', sm: 'flex-start' }}
+          gap={{ base: 'sm', sm: 'md' }}
+          maw={860}
+          mx="auto"
+        >
+          <Etape
+            num={1}
+            titre="Choisissez un outil"
+            description="Le calculateur de recette ou le calcul du métabolisme de base, selon ce que vous cherchez."
+          />
+          <FlecheEtape />
+          <Etape
+            num={2}
+            titre="Renseignez vos informations"
+            description="Vos ingrédients et leurs quantités, ou vos données personnelles."
+          />
+          <FlecheEtape />
+          <Etape
+            num={3}
+            titre="Obtenez vos résultats"
+            description="Les calculs s'affichent instantanément et se mettent à jour à chaque modification."
+          />
+        </Flex>
       </Box>
 
       <SectionHeader title="Que pouvez-vous faire ici ?" />
@@ -119,48 +173,6 @@ export function AccueilPage() {
               l'estime en kcal par jour avec la formule de Harris & Benedict."
           />
         </SimpleGrid>
-      </Box>
-
-      <SectionHeader title="Comment ça marche ?" />
-      <Box p={{ base: 20, sm: 32 }}>
-        <Stack gap="lg" maw={680} mx="auto">
-          <Group align="flex-start" wrap="nowrap" gap="md">
-            <ThemeIcon size={32} radius="xl" variant="filled" color="green" style={{ flexShrink: 0 }}>
-              <Text fw={700} fz={14}>1</Text>
-            </ThemeIcon>
-            <div>
-              <Text fw={600}>Choisissez un outil</Text>
-              <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
-                Le calculateur de recette ou le calcul du métabolisme de base,
-                selon ce que vous cherchez.
-              </Text>
-            </div>
-          </Group>
-          <Group align="flex-start" wrap="nowrap" gap="md">
-            <ThemeIcon size={32} radius="xl" variant="filled" color="green" style={{ flexShrink: 0 }}>
-              <Text fw={700} fz={14}>2</Text>
-            </ThemeIcon>
-            <div>
-              <Text fw={600}>Renseignez vos informations</Text>
-              <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
-                Vos ingrédients et leurs quantités, ou vos données personnelles.
-                Rien n'est enregistré : tout reste sur votre écran.
-              </Text>
-            </div>
-          </Group>
-          <Group align="flex-start" wrap="nowrap" gap="md">
-            <ThemeIcon size={32} radius="xl" variant="filled" color="green" style={{ flexShrink: 0 }}>
-              <Text fw={700} fz={14}>3</Text>
-            </ThemeIcon>
-            <div>
-              <Text fw={600}>Obtenez vos résultats</Text>
-              <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
-                Les calculs s'affichent instantanément et se mettent à jour à
-                chaque modification.
-              </Text>
-            </div>
-          </Group>
-        </Stack>
       </Box>
 
       <Box p={{ base: 24, sm: 40 }} style={{ textAlign: 'center' }}>

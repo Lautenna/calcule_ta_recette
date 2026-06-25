@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use App\Repository\UserRepository;
 use App\State\UserPasswordHasher;
+use App\State\UserRegistrationProcessor;
 use App\Validator\ValidRegistrationCode;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -22,12 +23,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[UniqueEntity(fields: ['email'], message: 'Cet email est déjà utilisé.')]
 #[ApiResource(
     operations: [
-        // Inscription publique : hash du mot de passe via le processor
+        // Inscription publique : hash du mot de passe + envoi de l'email de confirmation
         new Post(
             uriTemplate: '/users',
             denormalizationContext: ['groups' => ['user:write']],
             validationContext: ['groups' => ['Default', 'user:create']],
-            processor: UserPasswordHasher::class,
+            processor: UserRegistrationProcessor::class,
         ),
         // Lecture / mise à jour du profil (protégés — propriétaire uniquement)
         new Get(security: "is_granted('ROLE_USER') and object == user"),
@@ -101,6 +102,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     #[Groups(['user:read'])]
     private \DateTimeImmutable $createdAt;
+
+    /**
+     * L'email a-t-il été confirmé via le lien reçu par mail ?
+     * Tant que false, la connexion est refusée (voir App\Security\UserChecker).
+     */
+    #[ORM\Column]
+    #[Groups(['user:read'])]
+    private bool $isVerified = false;
+
+    /**
+     * Jeton aléatoire envoyé par mail pour confirmer l'inscription.
+     * Effacé une fois l'email confirmé. Jamais exposé via l'API.
+     */
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $confirmationToken = null;
+
+    /**
+     * Date limite de validité du jeton de confirmation (24 h).
+     */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $confirmationExpiresAt = null;
 
     public function __construct()
     {
@@ -209,6 +231,51 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function getConfirmationToken(): ?string
+    {
+        return $this->confirmationToken;
+    }
+
+    public function getConfirmationExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->confirmationExpiresAt;
+    }
+
+    /**
+     * Démarre (ou relance) la confirmation : génère un nouveau jeton valable 24 h
+     * et remet le compte à l'état « non confirmé ».
+     */
+    public function startEmailConfirmation(): void
+    {
+        $this->isVerified = false;
+        $this->confirmationToken = bin2hex(random_bytes(32));
+        $this->confirmationExpiresAt = (new \DateTimeImmutable())->modify('+24 hours');
+    }
+
+    /**
+     * Marque l'email comme confirmé et efface le jeton (usage unique).
+     */
+    public function confirmEmail(): void
+    {
+        $this->isVerified = true;
+        $this->confirmationToken = null;
+        $this->confirmationExpiresAt = null;
+    }
+
+    /**
+     * Le jeton de confirmation est-il encore valable (non expiré) ?
+     */
+    public function isConfirmationTokenValid(): bool
+    {
+        return $this->confirmationExpiresAt !== null
+            && $this->confirmationExpiresAt > new \DateTimeImmutable();
     }
 
     /**

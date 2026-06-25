@@ -8,6 +8,7 @@ import { AccueilPage } from './pages/AccueilPage'
 import { ProfilPage } from './pages/ProfilPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { ConfirmationPage } from './pages/ConfirmationPage'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/metabolisme" element={<MetabolismePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/confirmation" element={<ConfirmationPage />} />
             <Route
               path="/profil"
               element={
