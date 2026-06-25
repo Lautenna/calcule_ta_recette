@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from '@mantine/form'
 import {
   Paper, Stack, Title, Text, TextInput, PasswordInput, Button, Anchor, Alert,
@@ -110,7 +110,13 @@ export function LoginPage() {
 
             <Text size="sm" c="dimmed" ta="center">
               Pas encore de compte ?{' '}
-              <Anchor component={Link} to="/register" state={{ email: form.values.email }} c="green">Créer un compte</Anchor>
+              <Anchor
+                c="green"
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate('/register', { state: { email: form.getValues().email } })}
+              >
+                Créer un compte
+              </Anchor>
             </Text>
           </Stack>
         </form>
