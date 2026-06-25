@@ -96,7 +96,7 @@ export function Navbar() {
             </Menu.Dropdown>
           </Menu>
         ) : (
-          <Button component={Link} to="/login" size="sm" variant="light" color="green" ml={12}>
+          <Button component={Link} to="/login" size="sm" variant="filled" color="green" ml={12}>
             Connexion
           </Button>
         )}
@@ -146,7 +146,7 @@ export function Navbar() {
               </Button>
             </>
           ) : (
-            <Button component={Link} to="/login" onClick={close} variant="light" color="green">
+            <Button component={Link} to="/login" onClick={close} variant="filled" color="green">
               Connexion
             </Button>
           )}
