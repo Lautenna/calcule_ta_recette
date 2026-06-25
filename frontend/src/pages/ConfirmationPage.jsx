@@ -36,8 +36,8 @@ export function ConfirmationPage() {
   }, [token, confirmEmail])
 
   return (
-    <Stack align="center" pt={64} px="md" pb={48}>
-      <Paper withBorder shadow="sm" radius="md" p={32} w="100%" maw={440}>
+    <Stack align="center" pt={{ base: 32, sm: 64 }} px="md" pb={48}>
+      <Paper withBorder shadow="sm" radius="md" p={{ base: 24, sm: 32 }} w="100%" maw={440}>
         <Stack gap="md" align="center" ta="center">
           {status === 'loading' && (
             <>

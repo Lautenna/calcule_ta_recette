@@ -270,7 +270,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
           </>
         ) : (
           <>
-            <Grid.Col span={{ base: 5, sm: 2 }}>
+            <Grid.Col span={{ base: 12, sm: 2 }}>
               <TextInput
                 label={<Text fz={12} c="dimmed">Marque</Text>}
                 placeholder="Non précisée"

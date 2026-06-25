@@ -59,8 +59,8 @@ export function LoginPage() {
   }
 
   return (
-    <Stack align="center" pt={64} px="md">
-      <Paper withBorder shadow="sm" radius="md" p={32} w="100%" maw={400}>
+    <Stack align="center" pt={{ base: 32, sm: 64 }} px="md">
+      <Paper withBorder shadow="sm" radius="md" p={{ base: 24, sm: 32 }} w="100%" maw={400}>
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack gap="md">
             <Stack gap={4}>

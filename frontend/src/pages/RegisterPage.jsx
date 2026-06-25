@@ -11,8 +11,8 @@ import { useAuth } from '../context/AuthContext'
 // Écran affiché après une inscription réussie : invite à confirmer l'email.
 function VerifierEmail({ email, onResend, resending, resent }) {
   return (
-    <Stack align="center" pt={48} px="md" pb={48}>
-      <Paper withBorder shadow="sm" radius="md" p={32} w="100%" maw={440}>
+    <Stack align="center" pt={{ base: 32, sm: 48 }} px="md" pb={48}>
+      <Paper withBorder shadow="sm" radius="md" p={{ base: 24, sm: 32 }} w="100%" maw={440}>
         <Stack gap="md" align="center" ta="center">
           <ThemeIcon size={56} radius="xl" variant="light" color="green">
             <IconMailCheck size={30} />
@@ -118,8 +118,8 @@ export function RegisterPage() {
   }
 
   return (
-    <Stack align="center" pt={48} px="md" pb={48}>
-      <Paper withBorder shadow="sm" radius="md" p={32} w="100%" maw={420}>
+    <Stack align="center" pt={{ base: 32, sm: 48 }} px="md" pb={48}>
+      <Paper withBorder shadow="sm" radius="md" p={{ base: 24, sm: 32 }} w="100%" maw={420}>
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack gap="md">
             <Stack gap={4}>
