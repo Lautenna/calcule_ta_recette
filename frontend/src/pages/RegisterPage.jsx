@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useForm } from '@mantine/form'
 import {
   Paper, Stack, Title, Text, TextInput, PasswordInput, Button, Anchor, Alert,
@@ -51,6 +51,7 @@ function VerifierEmail({ email, onResend, resending, resent }) {
 
 export function RegisterPage() {
   const { register, resendConfirmation } = useAuth()
+  const location = useLocation()
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState(null)
@@ -58,7 +59,8 @@ export function RegisterPage() {
   const [resent, setResent] = useState(false)
 
   const form = useForm({
-    initialValues: { email: '', pseudo: '', plainPassword: '', confirm: '', codeInvitation: '' },
+    // Reprend l'email éventuellement saisi sur la page de connexion.
+    initialValues: { email: location.state?.email || '', pseudo: '', plainPassword: '', confirm: '', codeInvitation: '' },
     validate: {
       email: (v) => (/^\S+@\S+\.\S+$/.test(v) ? null : 'Email invalide'),
       pseudo: (v) => (v.trim().length >= 2 ? null : 'Au moins 2 caractères'),

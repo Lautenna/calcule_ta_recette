@@ -110,7 +110,7 @@ export function LoginPage() {
 
             <Text size="sm" c="dimmed" ta="center">
               Pas encore de compte ?{' '}
-              <Anchor component={Link} to="/register" c="green">Créer un compte</Anchor>
+              <Anchor component={Link} to="/register" state={{ email: form.values.email }} c="green">Créer un compte</Anchor>
             </Text>
           </Stack>
         </form>
