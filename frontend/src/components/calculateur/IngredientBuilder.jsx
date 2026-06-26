@@ -41,8 +41,8 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
       notifications.show({
         color: 'red',
         message: err?.status === 404
-          ? 'Aucun produit trouvé pour ce code-barres.'
-          : (err?.message || 'Échec de la recherche du produit.'),
+          ? 'Aucun produit trouvé pour ce code-barres. Renseignez les informations à la main.'
+          : (err?.message || 'Échec de la recherche du produit. Renseignez les informations à la main.'),
       })
     }
   }
@@ -348,7 +348,6 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             <Grid.Col span={{ base: 12, sm: 5 }}>
               <Autocomplete
                 label="Nom du produit"
-                description="Vos ingrédients enregistrés, la base Ciqual (ANSES), un code-barres ci-dessus — ou saisie libre"
                 withAsterisk
                 placeholder="ex : carotte, farine…"
                 leftSection={<IconSearch size={15} />}
