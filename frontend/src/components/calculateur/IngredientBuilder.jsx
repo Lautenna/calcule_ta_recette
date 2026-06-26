@@ -1,4 +1,4 @@
-import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Autocomplete, Radio, Box, Slider, Tooltip, Divider, Anchor, Loader } from '@mantine/core'
+import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Autocomplete, SegmentedControl, Popover, Box, Slider, Tooltip, Divider, Anchor, Loader } from '@mantine/core'
 import { IconTrash, IconPlus, IconChevronDown, IconChevronUp, IconCheck, IconPencil, IconSearch, IconStar, IconStarFilled, IconBarcode, IconCamera } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -25,7 +25,12 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
   // Recherche par code-barres (OpenFoodFacts) — saisie sur ordinateur ou scan caméra.
   const [codeBarre, setCodeBarre] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
+  const [codePopover, setCodePopover] = useState(false)
   const lookupProduit = useProduitCodeBarre()
+
+  // Les valeurs nutritionnelles sont masquées par défaut (la carte reste légère
+  // quand on scanne ou cherche) ; on les ouvre à la demande ou en cas d'erreur.
+  const [showNutrition, setShowNutrition] = useState(false)
 
   const handleLookup = async (code) => {
     const c = String(code ?? '').replace(/\D/g, '')
@@ -35,9 +40,11 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
       onFillFromBarcode(ingredient.id, produit)
       clearError('nom'); clearError('energie_kcal'); clearError('proteines'); clearError('glucides'); clearError('graisses')
       setScannerOpen(false)
+      setCodePopover(false)
       notifications.show({ color: 'green', message: `« ${produit.nom} » importé depuis son code-barres.` })
     } catch (err) {
       setScannerOpen(false)
+      setCodePopover(false)
       notifications.show({
         color: 'red',
         message: err?.status === 404
@@ -113,6 +120,8 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
       if (isEmpty(ingredient.graisses)) errs.graisses = 'Obligatoire'
     }
     setErrors(errs)
+    // Les valeurs sont peut-être repliées : on les rouvre s'il manque des champs.
+    if (errs.energie_kcal || errs.proteines || errs.glucides || errs.graisses) setShowNutrition(true)
     if (Object.keys(errs).length === 0) setValidated(true)
   }
 
@@ -122,6 +131,10 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
     delete next[field]
     return next
   })
+
+  // Des valeurs sont-elles déjà renseignées (import code-barres / Ciqual / édition) ?
+  const hasNutrition = !isEmpty(ingredient.energie_kcal) || !isEmpty(ingredient.proteines)
+    || !isEmpty(ingredient.glucides) || !isEmpty(ingredient.graisses)
 
   const handleSaveToProfile = async () => {
     // Pas connectée : on propose la connexion plutôt que d'enregistrer.
@@ -216,178 +229,160 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}
     >
-      {!isRecette && (
-        <Group gap="sm" mb={12} align="flex-end" wrap="wrap">
-          <Button
+      {/* Type : premier choix, en boutons segmentés ; suppression alignée à droite. */}
+      <Group justify="space-between" align="center" mb={14} wrap="nowrap">
+        <Group gap={8} align="center" wrap="nowrap">
+          <SegmentedControl
+            size="xs"
             color="green"
-            variant="light"
-            leftSection={<IconCamera size={16} />}
-            onClick={() => setScannerOpen(true)}
-          >
-            Scanner un code-barres
-          </Button>
-          <TextInput
-            label={<Text fz={11} c="dimmed">…ou saisir le code à la main</Text>}
-            placeholder="ex : 3017620422003"
-            leftSection={<IconBarcode size={15} />}
-            rightSection={
-              <ActionIcon
-                variant="subtle"
-                color="green"
-                disabled={codeBarre.length < 8}
-                loading={lookupProduit.isPending}
-                onClick={() => handleLookup(codeBarre)}
-                aria-label="Rechercher ce code-barres"
-              >
-                <IconSearch size={15} />
-              </ActionIcon>
-            }
-            value={codeBarre}
-            onChange={(e) => setCodeBarre(e.currentTarget.value.replace(/\D/g, ''))}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleLookup(codeBarre) } }}
-            style={{ flex: 1, minWidth: 200, maxWidth: 280 }}
-          />
-        </Group>
-      )}
-
-      <Grid align="flex-end" gutter="sm">
-        {/* Radio type */}
-        <Grid.Col span={{ base: 12, sm: 2 }}>
-          <Text fz={11} c="dimmed" mb={4} style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Type
-          </Text>
-          <Radio.Group
             value={ingredient.type}
             onChange={(val) => onUpdate(ingredient.id, 'type', val)}
+            data={[
+              { label: 'Ingrédient', value: 'ingredient' },
+              { label: 'Recette', value: 'recette' },
+            ]}
+          />
+          <Tooltip
+            label="« Recette » : réutilisez une de vos recettes enregistrées comme ingrédient, en indiquant la quantité en grammes."
+            withArrow
+            multiline
+            maw={250}
+            position="right"
           >
-            <Stack gap={4}>
-              <Radio value="ingredient" label="Ingrédient" size="xs" />
-              <Radio
-                value="recette"
-                size="xs"
-                label={
-                  <Group gap={4} align="center" wrap="nowrap">
-                    <Text size="xs">Recette</Text>
-                    <Tooltip
-                      label="Utilisez une de vos recettes enregistrées comme ingrédient : indiquez la quantité en grammes."
-                      withArrow
-                      multiline
-                      maw={220}
-                      position="right"
+            <Box style={{ width: 15, height: 15, borderRadius: '50%', background: 'var(--mantine-color-gray-4)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'help', flexShrink: 0 }}>
+              <Text fz={9} c="white" fw={700} lh={1}>?</Text>
+            </Box>
+          </Tooltip>
+        </Group>
+        <ActionIcon variant="subtle" color="red" onClick={() => onRemove(ingredient.id)} aria-label="Supprimer cet ingrédient">
+          <IconTrash size={16} />
+        </ActionIcon>
+      </Group>
+
+      {isRecette ? (
+        <Grid align="flex-end" gutter="sm">
+          <Grid.Col span={{ base: 12, sm: 8 }}>
+            <Select
+              label="Recette enregistrée"
+              placeholder="Choisir une recette…"
+              data={recettes.map((r) => ({ value: String(r.id), label: r.nom }))}
+              value={ingredient.recetteId ? String(ingredient.recetteId) : null}
+              error={errors.recetteId}
+              onChange={(val) => {
+                const recette = recettes.find((r) => String(r.id) === val) ?? null
+                onSelectRecette(ingredient.id, recette, recette ? recipePer100g(recette.composition) : null)
+                clearError('recetteId')
+              }}
+              searchable
+              nothingFoundMessage="Aucune recette trouvée"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
+            <NumberInput
+              label="Quantité (g)"
+              labelProps={{ style: { whiteSpace: 'nowrap' } }}
+              withAsterisk
+              placeholder="0"
+              min={0}
+              value={ingredient.quantite}
+              error={errors.quantite}
+              onChange={(val) => { onUpdate(ingredient.id, 'quantite', val); clearError('quantite') }}
+            />
+          </Grid.Col>
+        </Grid>
+      ) : (
+        <Grid align="flex-end" gutter="sm">
+          {/* Nom en vedette + scan / saisie du code-barres juste à côté */}
+          <Grid.Col span={{ base: 12, sm: 7 }}>
+            <Autocomplete
+              label="Nom du produit"
+              withAsterisk
+              placeholder="ex : carotte, farine…"
+              leftSection={<IconSearch size={15} />}
+              rightSection={isFetching ? <Loader size={14} /> : null}
+              data={autocompleteData}
+              value={ingredient.nom}
+              error={errors.nom}
+              onChange={handleSelect}
+              filter={({ options }) => options}
+              comboboxProps={{ withinPortal: true }}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 5 }}>
+            <Group gap="xs" wrap="nowrap" align="flex-end">
+              <Button
+                color="green"
+                variant="light"
+                leftSection={<IconCamera size={16} />}
+                onClick={() => setScannerOpen(true)}
+                style={{ flex: 1 }}
+              >
+                Scanner un code-barres
+              </Button>
+              <Popover opened={codePopover} onChange={setCodePopover} position="bottom-end" withArrow shadow="md" trapFocus>
+                <Popover.Target>
+                  <ActionIcon
+                    variant="default"
+                    size={36}
+                    onClick={() => setCodePopover((o) => !o)}
+                    aria-label="Saisir un code-barres à la main"
+                  >
+                    <IconBarcode size={18} />
+                  </ActionIcon>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <Text fz={11} c="dimmed" mb={6}>Saisir le code-barres</Text>
+                  <Group gap="xs" wrap="nowrap" align="flex-end">
+                    <TextInput
+                      size="xs"
+                      placeholder="ex : 3017620422003"
+                      leftSection={<IconBarcode size={14} />}
+                      value={codeBarre}
+                      onChange={(e) => setCodeBarre(e.currentTarget.value.replace(/\D/g, ''))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleLookup(codeBarre) } }}
+                      data-autofocus
+                      style={{ width: 190 }}
+                    />
+                    <Button
+                      size="xs"
+                      color="green"
+                      loading={lookupProduit.isPending}
+                      disabled={codeBarre.length < 8}
+                      onClick={() => handleLookup(codeBarre)}
                     >
-                      <Box
-                        style={{
-                          width: 11,
-                          height: 11,
-                          borderRadius: '50%',
-                          background: 'var(--mantine-color-dimmed)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          cursor: 'help',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Text fz={7} c="white" fw={700} lh={1}>?</Text>
-                      </Box>
-                    </Tooltip>
+                      OK
+                    </Button>
                   </Group>
-                }
-              />
-            </Stack>
-          </Radio.Group>
-        </Grid.Col>
+                </Popover.Dropdown>
+              </Popover>
+            </Group>
+          </Grid.Col>
 
-        {isRecette ? (
-          <>
-            <Grid.Col span={{ base: 10, sm: 7 }}>
-              <Select
-                label="Recette enregistrée"
-                placeholder="Choisir une recette…"
-                data={recettes.map((r) => ({ value: String(r.id), label: r.nom }))}
-                value={ingredient.recetteId ? String(ingredient.recetteId) : null}
-                error={errors.recetteId}
-                onChange={(val) => {
-                  const recette = recettes.find((r) => String(r.id) === val) ?? null
-                  onSelectRecette(ingredient.id, recette, recette ? recipePer100g(recette.composition) : null)
-                  clearError('recetteId')
-                }}
-                searchable
-                nothingFoundMessage="Aucune recette trouvée"
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 10, sm: 2 }}>
-              <NumberInput
-                label="Quantité (g)"
-                labelProps={{ style: { whiteSpace: 'nowrap' } }}
-                withAsterisk
-                placeholder="0"
-                min={0}
-                value={ingredient.quantite}
-                error={errors.quantite}
-                onChange={(val) => { onUpdate(ingredient.id, 'quantite', val); clearError('quantite') }}
-              />
-            </Grid.Col>
-          </>
-        ) : (
-          <>
-            <Grid.Col span={{ base: 12, sm: 2 }}>
-              <TextInput
-                label={<Text fz={12} c="dimmed">Marque</Text>}
-                placeholder="Non précisée"
-                value={ingredient.marque}
-                onChange={(e) => onUpdate(ingredient.id, 'marque', e.target.value)}
-                styles={{
-                  input: {
-                    color: 'var(--mantine-color-dimmed)',
-                    background: 'var(--mantine-color-gray-0)',
-                  },
-                }}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, sm: 5 }}>
-              <Autocomplete
-                label="Nom du produit"
-                withAsterisk
-                placeholder="ex : carotte, farine…"
-                leftSection={<IconSearch size={15} />}
-                rightSection={isFetching ? <Loader size={14} /> : null}
-                data={autocompleteData}
-                value={ingredient.nom}
-                error={errors.nom}
-                onChange={handleSelect}
-                filter={({ options }) => options}
-                comboboxProps={{ withinPortal: true }}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 10, sm: 2 }}>
-              <NumberInput
-                label="Quantité (g/ml)"
-                labelProps={{ style: { whiteSpace: 'nowrap' } }}
-                withAsterisk
-                placeholder="0"
-                min={0}
-                stepHoldDelay={500}
-                stepHoldInterval={(count) => Math.max(1000 / (count + 1), 50)}
-                value={ingredient.quantite}
-                error={errors.quantite}
-                onChange={(val) => { onUpdate(ingredient.id, 'quantite', val); clearError('quantite') }}
-              />
-            </Grid.Col>
-          </>
-        )}
-
-        <Grid.Col span={{ base: 2, sm: 1 }} style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
-          <ActionIcon
-            variant="subtle"
-            color="red"
-            onClick={() => onRemove(ingredient.id)}
-            aria-label="Supprimer cet ingrédient"
-          >
-            <IconTrash size={16} />
-          </ActionIcon>
-        </Grid.Col>
-      </Grid>
+          <Grid.Col span={{ base: 8, sm: 8 }}>
+            <TextInput
+              label={<Text fz={12} c="dimmed">Marque</Text>}
+              placeholder="Non précisée"
+              value={ingredient.marque}
+              onChange={(e) => onUpdate(ingredient.id, 'marque', e.target.value)}
+              styles={{ input: { color: 'var(--mantine-color-dimmed)', background: 'var(--mantine-color-gray-0)' } }}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 4, sm: 4 }}>
+            <NumberInput
+              label="Quantité (g/ml)"
+              labelProps={{ style: { whiteSpace: 'nowrap' } }}
+              withAsterisk
+              placeholder="0"
+              min={0}
+              stepHoldDelay={500}
+              stepHoldInterval={(count) => Math.max(1000 / (count + 1), 50)}
+              value={ingredient.quantite}
+              error={errors.quantite}
+              onChange={(val) => { onUpdate(ingredient.id, 'quantite', val); clearError('quantite') }}
+            />
+          </Grid.Col>
+        </Grid>
+      )}
 
       <BarcodeScanner
         opened={scannerOpen}
@@ -402,54 +397,78 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
       )}
 
       {!isRecette && (
-        <Box mt={10}>
-          <Divider mb={8} />
-          <Text fz={11} c="dimmed" mb={6} style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-            Valeurs nutritionnelles pour 100g
-          </Text>
-          <Grid gutter="xs">
-            <Grid.Col span={{ base: 6, sm: 3 }}>
-              <NumberInput size="xs" label="Énergie (kcal)" min={0} placeholder="0" withAsterisk value={ingredient.energie_kcal || ''} error={errors.energie_kcal} onChange={(val) => { onUpdate(ingredient.id, 'energie_kcal', val); clearError('energie_kcal') }} />
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, sm: 3 }}>
-              <NumberInput size="xs" label="Protéines (g)" min={0} placeholder="0" withAsterisk value={ingredient.proteines || ''} error={errors.proteines} onChange={(val) => { onUpdate(ingredient.id, 'proteines', val); clearError('proteines') }} />
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, sm: 3 }}>
-              <NumberInput size="xs" label="Glucides (g)" min={0} placeholder="0" withAsterisk value={ingredient.glucides || ''} error={errors.glucides} onChange={(val) => { onUpdate(ingredient.id, 'glucides', val); clearError('glucides') }} />
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, sm: 3 }}>
-              <NumberInput size="xs" label="Lipides (g)" min={0} placeholder="0" withAsterisk value={ingredient.graisses || ''} error={errors.graisses} onChange={(val) => { onUpdate(ingredient.id, 'graisses', val); clearError('graisses') }} />
-            </Grid.Col>
-          </Grid>
+        <Box mt={12}>
+          <Divider mb={10} />
+          {showNutrition ? (
+            <>
+              <Group justify="space-between" align="center" mb={8}>
+                <Text fz={11} c="dimmed" style={{ fontFamily: 'var(--mantine-font-family-monospace)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  Valeurs nutritionnelles pour 100g
+                </Text>
+                {hasNutrition && (
+                  <Anchor component="button" type="button" fz={11} c="dimmed" onClick={() => setShowNutrition(false)} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <IconChevronUp size={12} /> Replier
+                  </Anchor>
+                )}
+              </Group>
+              <Grid gutter="xs">
+                <Grid.Col span={{ base: 6, sm: 3 }}>
+                  <NumberInput size="xs" label="Énergie (kcal)" min={0} placeholder="0" withAsterisk value={ingredient.energie_kcal || ''} error={errors.energie_kcal} onChange={(val) => { onUpdate(ingredient.id, 'energie_kcal', val); clearError('energie_kcal') }} />
+                </Grid.Col>
+                <Grid.Col span={{ base: 6, sm: 3 }}>
+                  <NumberInput size="xs" label="Protéines (g)" min={0} placeholder="0" withAsterisk value={ingredient.proteines || ''} error={errors.proteines} onChange={(val) => { onUpdate(ingredient.id, 'proteines', val); clearError('proteines') }} />
+                </Grid.Col>
+                <Grid.Col span={{ base: 6, sm: 3 }}>
+                  <NumberInput size="xs" label="Glucides (g)" min={0} placeholder="0" withAsterisk value={ingredient.glucides || ''} error={errors.glucides} onChange={(val) => { onUpdate(ingredient.id, 'glucides', val); clearError('glucides') }} />
+                </Grid.Col>
+                <Grid.Col span={{ base: 6, sm: 3 }}>
+                  <NumberInput size="xs" label="Lipides (g)" min={0} placeholder="0" withAsterisk value={ingredient.graisses || ''} error={errors.graisses} onChange={(val) => { onUpdate(ingredient.id, 'graisses', val); clearError('graisses') }} />
+                </Grid.Col>
+              </Grid>
 
-          <Anchor component="button" fz={11} c="dimmed" mt={8} onClick={() => setShowExtra((v) => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-          >
-            {showExtra ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />}
-            {showExtra ? 'Masquer les détails' : 'Afficher les détails'}
-          </Anchor>
+              <Anchor component="button" type="button" fz={11} c="dimmed" mt={8} onClick={() => setShowExtra((v) => !v)}
+                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+              >
+                {showExtra ? <IconChevronUp size={12} /> : <IconChevronDown size={12} />}
+                {showExtra ? 'Masquer les détails' : 'Afficher les détails (sucres, sel, fibres…)'}
+              </Anchor>
 
-          {showExtra && (
-            <Grid gutter="xs" mt={6}>
-              <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
-                <NumberInput size="xs" label="dont Sucres (g)" min={0} placeholder="0" value={ingredient.sucres || ''} onChange={(val) => onUpdate(ingredient.id, 'sucres', val)} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
-                <NumberInput size="xs" label="dont Saturées (g)" min={0} placeholder="0" value={ingredient.graisses_sat || ''} onChange={(val) => onUpdate(ingredient.id, 'graisses_sat', val)} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
-                <NumberInput size="xs" label="Fibres (g)" min={0} placeholder="0" value={ingredient.fibres || ''} onChange={(val) => onUpdate(ingredient.id, 'fibres', val)} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
-                <NumberInput size="xs" label="Sel (g)" min={0} placeholder="0" value={ingredient.sel || ''} onChange={(val) => onUpdate(ingredient.id, 'sel', val)} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
-                <NumberInput size="xs" label="Fer (mg)" min={0} placeholder="0" value={ingredient.fer || ''} onChange={(val) => onUpdate(ingredient.id, 'fer', val)} />
-              </Grid.Col>
-              <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
-                <NumberInput size="xs" label="Calcium (mg)" min={0} placeholder="0" value={ingredient.calcium || ''} onChange={(val) => onUpdate(ingredient.id, 'calcium', val)} />
-              </Grid.Col>
-            </Grid>
+              {showExtra && (
+                <Grid gutter="xs" mt={6}>
+                  <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
+                    <NumberInput size="xs" label="dont Sucres (g)" min={0} placeholder="0" value={ingredient.sucres || ''} onChange={(val) => onUpdate(ingredient.id, 'sucres', val)} />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
+                    <NumberInput size="xs" label="dont Saturées (g)" min={0} placeholder="0" value={ingredient.graisses_sat || ''} onChange={(val) => onUpdate(ingredient.id, 'graisses_sat', val)} />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
+                    <NumberInput size="xs" label="Fibres (g)" min={0} placeholder="0" value={ingredient.fibres || ''} onChange={(val) => onUpdate(ingredient.id, 'fibres', val)} />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
+                    <NumberInput size="xs" label="Sel (g)" min={0} placeholder="0" value={ingredient.sel || ''} onChange={(val) => onUpdate(ingredient.id, 'sel', val)} />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
+                    <NumberInput size="xs" label="Fer (mg)" min={0} placeholder="0" value={ingredient.fer || ''} onChange={(val) => onUpdate(ingredient.id, 'fer', val)} />
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
+                    <NumberInput size="xs" label="Calcium (mg)" min={0} placeholder="0" value={ingredient.calcium || ''} onChange={(val) => onUpdate(ingredient.id, 'calcium', val)} />
+                  </Grid.Col>
+                </Grid>
+              )}
+            </>
+          ) : hasNutrition ? (
+            <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
+              <Text fz={12} c="dimmed">
+                Pour 100 g : <Text span fw={600} c="dark">{Math.round(ingredient.energie_kcal || 0)}</Text> kcal · P {ingredient.proteines || 0} · G {ingredient.glucides || 0} · L {ingredient.graisses || 0}
+              </Text>
+              <Button size="compact-xs" variant="subtle" color="gray" leftSection={<IconPencil size={12} />} onClick={() => setShowNutrition(true)} style={{ flexShrink: 0 }}>
+                Modifier
+              </Button>
+            </Group>
+          ) : (
+            <Button size="xs" variant="default" leftSection={<IconChevronDown size={14} />} onClick={() => setShowNutrition(true)}>
+              Renseigner les valeurs nutritionnelles
+            </Button>
           )}
         </Box>
       )}
