@@ -114,6 +114,18 @@ export function CalculateurPage() {
       })
     )
 
+  // Pré-remplit un ingrédient depuis un produit OpenFoodFacts (code-barres).
+  // Non marqué « Ciqual » : absent de notre base, on propose donc de l'enregistrer.
+  const onFillFromBarcode = (id, produit) =>
+    setIngredients((prev) =>
+      prev.map((i) => {
+        if (i.id !== id) return i
+        const next = { ...i, nom: produit.nom ?? '', marque: produit.marque ?? '', sourceCiqual: false, sourceIngredientId: null }
+        for (const key of NUTRIENT_KEYS) next[key] = produit[key] ?? ''
+        return next
+      })
+    )
+
   // Pré-remplit à partir d'un ingrédient enregistré (mémorise sa provenance).
   const onFillFromIngredient = (id, ing) =>
     setIngredients((prev) =>
@@ -210,6 +222,7 @@ export function CalculateurPage() {
         onUpdate={onUpdate}
         onSelectRecette={onSelectRecette}
         onFillFromCiqual={onFillFromCiqual}
+        onFillFromBarcode={onFillFromBarcode}
         onFillFromIngredient={onFillFromIngredient}
       />
 

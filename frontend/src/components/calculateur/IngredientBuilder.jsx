@@ -1,5 +1,5 @@
 import { TextInput, NumberInput, Button, ActionIcon, Group, Stack, Text, Grid, Select, Autocomplete, Radio, Box, Slider, Tooltip, Divider, Anchor, Loader } from '@mantine/core'
-import { IconTrash, IconPlus, IconChevronDown, IconChevronUp, IconCheck, IconPencil, IconSearch, IconStar, IconStarFilled } from '@tabler/icons-react'
+import { IconTrash, IconPlus, IconChevronDown, IconChevronUp, IconCheck, IconPencil, IconSearch, IconStar, IconStarFilled, IconBarcode, IconCamera } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDebouncedValue } from '@mantine/hooks'
@@ -7,18 +7,45 @@ import { notifications } from '@mantine/notifications'
 import { useRecettes } from '../../hooks/useRecettes'
 import { useIngredients, useSaveIngredient } from '../../hooks/useIngredients'
 import { useAliments } from '../../hooks/useAliments'
+import { useProduitCodeBarre } from '../../hooks/useProduitCodeBarre'
 import { useAuth } from '../../context/AuthContext'
 import { recipePer100g } from '../../utils/nutrition'
+import { BarcodeScanner } from './BarcodeScanner'
 
 const PERSO_PREFIX = '⭐ '
 
-function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFillFromCiqual, onFillFromIngredient, recettes, mesIngredients, canSave, onSaveIngredient, onRequireLogin }) {
+function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFillFromCiqual, onFillFromBarcode, onFillFromIngredient, recettes, mesIngredients, canSave, onSaveIngredient, onRequireLogin }) {
   const isRecette = ingredient.type === 'recette'
   const [showExtra, setShowExtra] = useState(false)
   const [validated, setValidated] = useState(ingredient._validated ?? false)
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [savedNow, setSavedNow] = useState(false)
+
+  // Recherche par code-barres (OpenFoodFacts) — saisie sur ordinateur ou scan caméra.
+  const [codeBarre, setCodeBarre] = useState('')
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const lookupProduit = useProduitCodeBarre()
+
+  const handleLookup = async (code) => {
+    const c = String(code ?? '').replace(/\D/g, '')
+    if (c.length < 8) return
+    try {
+      const produit = await lookupProduit.mutateAsync(c)
+      onFillFromBarcode(ingredient.id, produit)
+      clearError('nom'); clearError('energie_kcal'); clearError('proteines'); clearError('glucides'); clearError('graisses')
+      setScannerOpen(false)
+      notifications.show({ color: 'green', message: `« ${produit.nom} » importé depuis OpenFoodFacts.` })
+    } catch (err) {
+      setScannerOpen(false)
+      notifications.show({
+        color: 'red',
+        message: err?.status === 404
+          ? 'Aucun produit trouvé pour ce code-barres.'
+          : (err?.message || 'Échec de la recherche du produit.'),
+      })
+    }
+  }
 
   // Recherche Ciqual (ANSES) — directement pilotée par le nom saisi dans le champ.
   const [debouncedSearch] = useDebouncedValue(ingredient.nom ?? '', 250)
@@ -329,6 +356,45 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
         </Grid.Col>
       </Grid>
 
+      {!isRecette && (
+        <Group gap="xs" mt={10} align="flex-end" wrap="nowrap">
+          <TextInput
+            size="xs"
+            label={<Text fz={11} c="dimmed">Code-barres</Text>}
+            placeholder="ex : 3017620422003"
+            leftSection={<IconBarcode size={14} />}
+            value={codeBarre}
+            onChange={(e) => setCodeBarre(e.currentTarget.value.replace(/\D/g, ''))}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleLookup(codeBarre) } }}
+            style={{ flex: 1, maxWidth: 220 }}
+          />
+          <Button
+            size="xs"
+            variant="default"
+            loading={lookupProduit.isPending}
+            disabled={codeBarre.length < 8}
+            onClick={() => handleLookup(codeBarre)}
+          >
+            Rechercher
+          </Button>
+          <Button
+            size="xs"
+            variant="light"
+            color="green"
+            leftSection={<IconCamera size={14} />}
+            onClick={() => setScannerOpen(true)}
+          >
+            Scanner
+          </Button>
+        </Group>
+      )}
+
+      <BarcodeScanner
+        opened={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={(code) => { setCodeBarre(code.replace(/\D/g, '')); handleLookup(code) }}
+      />
+
       {isRecette && ingredient.recetteId && (
         <Text fz={11} c="dimmed" mt={8}>
           Profil calculé pour 100 g : {Math.round(ingredient.energie_kcal || 0)} kcal · P {Math.round(ingredient.proteines || 0)} g · G {Math.round(ingredient.glucides || 0)} g · L {Math.round(ingredient.graisses || 0)} g
@@ -403,7 +469,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
   )
 }
 
-export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove, onSelectRecette, onFillFromCiqual, onFillFromIngredient }) {
+export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate, onAdd, onRemove, onSelectRecette, onFillFromCiqual, onFillFromBarcode, onFillFromIngredient }) {
   const navigate = useNavigate()
   const { isAuthenticated } = useAuth()
   const { data: recettesData } = useRecettes()
@@ -455,6 +521,7 @@ export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate
             onRemove={onRemove}
             onSelectRecette={onSelectRecette}
             onFillFromCiqual={onFillFromCiqual}
+            onFillFromBarcode={onFillFromBarcode}
             onFillFromIngredient={onFillFromIngredient}
             recettes={recettes}
             mesIngredients={mesIngredients}
