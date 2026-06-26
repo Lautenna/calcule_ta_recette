@@ -216,6 +216,40 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
       }}
     >
+      {!isRecette && (
+        <Group gap="sm" mb={12} align="flex-end" wrap="wrap">
+          <Button
+            color="green"
+            variant="light"
+            leftSection={<IconCamera size={16} />}
+            onClick={() => setScannerOpen(true)}
+          >
+            Scanner un code-barres
+          </Button>
+          <TextInput
+            label={<Text fz={11} c="dimmed">…ou saisir le code à la main</Text>}
+            placeholder="ex : 3017620422003"
+            leftSection={<IconBarcode size={15} />}
+            rightSection={
+              <ActionIcon
+                variant="subtle"
+                color="green"
+                disabled={codeBarre.length < 8}
+                loading={lookupProduit.isPending}
+                onClick={() => handleLookup(codeBarre)}
+                aria-label="Rechercher ce code-barres"
+              >
+                <IconSearch size={15} />
+              </ActionIcon>
+            }
+            value={codeBarre}
+            onChange={(e) => setCodeBarre(e.currentTarget.value.replace(/\D/g, ''))}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleLookup(codeBarre) } }}
+            style={{ flex: 1, minWidth: 200, maxWidth: 280 }}
+          />
+        </Group>
+      )}
+
       <Grid align="flex-end" gutter="sm">
         {/* Radio type */}
         <Grid.Col span={{ base: 12, sm: 2 }}>
@@ -355,39 +389,6 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
           </ActionIcon>
         </Grid.Col>
       </Grid>
-
-      {!isRecette && (
-        <Group gap="xs" mt={10} align="flex-end" wrap="nowrap">
-          <TextInput
-            size="xs"
-            label={<Text fz={11} c="dimmed">Code-barres</Text>}
-            placeholder="ex : 3017620422003"
-            leftSection={<IconBarcode size={14} />}
-            value={codeBarre}
-            onChange={(e) => setCodeBarre(e.currentTarget.value.replace(/\D/g, ''))}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleLookup(codeBarre) } }}
-            style={{ flex: 1, maxWidth: 220 }}
-          />
-          <Button
-            size="xs"
-            variant="default"
-            loading={lookupProduit.isPending}
-            disabled={codeBarre.length < 8}
-            onClick={() => handleLookup(codeBarre)}
-          >
-            Rechercher
-          </Button>
-          <Button
-            size="xs"
-            variant="light"
-            color="green"
-            leftSection={<IconCamera size={14} />}
-            onClick={() => setScannerOpen(true)}
-          >
-            Scanner
-          </Button>
-        </Group>
-      )}
 
       <BarcodeScanner
         opened={scannerOpen}
