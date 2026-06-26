@@ -35,7 +35,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
       onFillFromBarcode(ingredient.id, produit)
       clearError('nom'); clearError('energie_kcal'); clearError('proteines'); clearError('glucides'); clearError('graisses')
       setScannerOpen(false)
-      notifications.show({ color: 'green', message: `« ${produit.nom} » importé depuis OpenFoodFacts.` })
+      notifications.show({ color: 'green', message: `« ${produit.nom} » importé depuis son code-barres.` })
     } catch (err) {
       setScannerOpen(false)
       notifications.show({
@@ -348,7 +348,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             <Grid.Col span={{ base: 12, sm: 5 }}>
               <Autocomplete
                 label="Nom du produit"
-                description="Vos ingrédients enregistrés et la base Ciqual (ANSES) — ou saisie libre"
+                description="Vos ingrédients enregistrés, la base Ciqual (ANSES), un code-barres ci-dessus — ou saisie libre"
                 withAsterisk
                 placeholder="ex : carotte, farine…"
                 leftSection={<IconSearch size={15} />}
