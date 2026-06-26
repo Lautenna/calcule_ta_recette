@@ -358,13 +358,18 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             </Group>
           </Grid.Col>
 
+          <Grid.Col span={12} pt={4} pb={0}>
+            <Text fz={11} c="dimmed">
+              Remplissage automatique via la base Ciqual ou un code-barres — ou saisissez tout à la main (nom, marque et valeurs) pour plus de précision.
+            </Text>
+          </Grid.Col>
+
           <Grid.Col span={{ base: 8, sm: 8 }}>
             <TextInput
-              label={<Text fz={12} c="dimmed">Marque</Text>}
-              placeholder="Non précisée"
+              label="Marque"
+              placeholder="Optionnel — ex : Nestlé, Bonne Maman…"
               value={ingredient.marque}
               onChange={(e) => onUpdate(ingredient.id, 'marque', e.target.value)}
-              styles={{ input: { color: 'var(--mantine-color-dimmed)', background: 'var(--mantine-color-gray-0)' } }}
             />
           </Grid.Col>
           <Grid.Col span={{ base: 4, sm: 4 }}>
@@ -467,7 +472,7 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             </Group>
           ) : (
             <Button size="xs" variant="default" leftSection={<IconChevronDown size={14} />} onClick={() => setShowNutrition(true)}>
-              Renseigner les valeurs nutritionnelles
+              Saisir les valeurs nutritionnelles à la main
             </Button>
           )}
         </Box>
