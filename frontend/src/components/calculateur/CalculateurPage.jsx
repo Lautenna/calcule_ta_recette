@@ -17,6 +17,7 @@ function emptyIngredient() {
     recetteId: null,
     sourceIngredientId: null,
     sourceCiqual: false,
+    photo: null,
     nom: '', marque: '', quantite: '',
     energie_kcal: '', energie_kj: '',
     graisses: '', graisses_sat: '',
@@ -97,6 +98,7 @@ export function CalculateurPage() {
         if (field === 'nom') {
           next.sourceCiqual = false
           next.sourceIngredientId = null
+          next.photo = null
         }
         return next
       })
@@ -108,7 +110,7 @@ export function CalculateurPage() {
     setIngredients((prev) =>
       prev.map((i) => {
         if (i.id !== id) return i
-        const next = { ...i, nom: aliment.nom ?? '', sourceCiqual: true, sourceIngredientId: null }
+        const next = { ...i, nom: aliment.nom ?? '', sourceCiqual: true, sourceIngredientId: null, photo: null }
         for (const key of NUTRIENT_KEYS) next[key] = aliment[key] ?? ''
         return next
       })
@@ -120,7 +122,7 @@ export function CalculateurPage() {
     setIngredients((prev) =>
       prev.map((i) => {
         if (i.id !== id) return i
-        const next = { ...i, nom: produit.nom ?? '', marque: produit.marque ?? '', sourceCiqual: false, sourceIngredientId: null }
+        const next = { ...i, nom: produit.nom ?? '', marque: produit.marque ?? '', sourceCiqual: false, sourceIngredientId: null, photo: produit.photo ?? null }
         for (const key of NUTRIENT_KEYS) next[key] = produit[key] ?? ''
         return next
       })
@@ -131,7 +133,7 @@ export function CalculateurPage() {
     setIngredients((prev) =>
       prev.map((i) => {
         if (i.id !== id) return i
-        const next = { ...i, nom: ing.nom ?? '', marque: ing.marque ?? '', sourceIngredientId: ing.id ?? null, sourceCiqual: false }
+        const next = { ...i, nom: ing.nom ?? '', marque: ing.marque ?? '', sourceIngredientId: ing.id ?? null, sourceCiqual: false, photo: ing.photo ?? null }
         for (const key of NUTRIENT_KEYS) next[key] = ing[key] ?? ''
         return next
       })

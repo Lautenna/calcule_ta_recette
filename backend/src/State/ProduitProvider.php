@@ -38,7 +38,7 @@ final class ProduitProvider implements ProviderInterface
 
         try {
             $response = $this->httpClient->request('GET', sprintf(self::ENDPOINT, $code), [
-                'query' => ['fields' => 'product_name,product_name_fr,brands,nutriments'],
+                'query' => ['fields' => 'product_name,product_name_fr,brands,nutriments,image_front_small_url,image_front_url,image_url'],
                 'headers' => ['User-Agent' => self::USER_AGENT],
                 'timeout' => 8,
             ]);
@@ -61,6 +61,10 @@ final class ProduitProvider implements ProviderInterface
         $produit->code = $code;
         $produit->nom = trim((string) ($product['product_name_fr'] ?? $product['product_name'] ?? '')) ?: 'Produit '.$code;
         $produit->marque = $this->firstBrand($product['brands'] ?? null);
+
+        // Vignette de face (200px) en priorité, avec repli sur les autres tailles.
+        $photo = $product['image_front_small_url'] ?? $product['image_front_url'] ?? $product['image_url'] ?? null;
+        $produit->photo = is_string($photo) && '' !== $photo ? $photo : null;
 
         $produit->energieKcal = $this->num($nutriments, 'energy-kcal_100g');
         $produit->energieKj = $this->num($nutriments, 'energy-kj_100g');

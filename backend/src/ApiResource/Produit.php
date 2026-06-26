@@ -35,6 +35,10 @@ class Produit
     #[Groups(['produit:read'])]
     public ?string $marque = null;
 
+    /** URL de la photo du produit (hébergée par OpenFoodFacts). */
+    #[Groups(['produit:read'])]
+    public ?string $photo = null;
+
     #[Groups(['produit:read'])]
     #[SerializedName('energie_kcal')]
     public ?float $energieKcal = null;

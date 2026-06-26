@@ -176,7 +176,18 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
         }}
       >
         <Group justify="space-between" wrap="nowrap" gap="xs">
-          <Box style={{ minWidth: 0 }}>
+          <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+            {ingredient.photo && (
+              <img
+                src={ingredient.photo}
+                alt={nomAffiche}
+                width={46}
+                height={46}
+                style={{ objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid var(--mantine-color-gray-2)', background: 'white' }}
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
+            )}
+            <Box style={{ minWidth: 0 }}>
             <Group gap={6} wrap="nowrap" align="baseline">
               <IconCheck size={14} color="var(--mantine-color-green-6)" style={{ flexShrink: 0 }} />
               <Text fw={600} fz="sm" truncate>{nomAffiche}</Text>
@@ -201,7 +212,8 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
                 {savedNow ? 'Enregistré dans mes ingrédients' : 'Enregistrer dans mes ingrédients'}
               </Button>
             )}
-          </Box>
+            </Box>
+          </Group>
           <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
             <ActionIcon variant="subtle" color="gray" onClick={() => setValidated(false)} aria-label="Modifier cet ingrédient">
               <IconPencil size={16} />
@@ -254,9 +266,21 @@ function IngredientCard({ ingredient, onUpdate, onRemove, onSelectRecette, onFil
             </Box>
           </Tooltip>
         </Group>
-        <ActionIcon variant="subtle" color="red" onClick={() => onRemove(ingredient.id)} aria-label="Supprimer cet ingrédient">
-          <IconTrash size={16} />
-        </ActionIcon>
+        <Group gap="xs" align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+          {!isRecette && ingredient.photo && (
+            <img
+              src={ingredient.photo}
+              alt={ingredient.nom || 'Produit'}
+              width={34}
+              height={34}
+              style={{ objectFit: 'cover', borderRadius: 6, border: '1px solid var(--mantine-color-gray-2)', background: 'white' }}
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
+          )}
+          <ActionIcon variant="subtle" color="red" onClick={() => onRemove(ingredient.id)} aria-label="Supprimer cet ingrédient">
+            <IconTrash size={16} />
+          </ActionIcon>
+        </Group>
       </Group>
 
       {isRecette ? (
