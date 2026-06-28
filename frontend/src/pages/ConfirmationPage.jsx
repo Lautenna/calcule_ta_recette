@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Paper, Stack, Title, Text, Button, Loader, ThemeIcon } from '@mantine/core'
-import { IconCircleCheck, IconCircleX } from '@tabler/icons-react'
+import { Paper, Stack, Title, Text, Button, Loader, ThemeIcon, TextInput, Alert } from '@mantine/core'
+import { IconCircleCheck, IconCircleX, IconMailCheck } from '@tabler/icons-react'
 import { useAuth } from '../context/AuthContext'
 
 // Page atteinte via le lien reçu par mail : /confirmation?token=xxx
 export function ConfirmationPage() {
-  const { confirmEmail } = useAuth()
+  const { confirmEmail, resendConfirmation } = useAuth()
   const [params] = useSearchParams()
   const token = params.get('token')
-  const [status, setStatus] = useState('loading') // loading | success | error
+  const [status, setStatus] = useState('loading') // loading | success | error | expired
   const [message, setMessage] = useState('')
+  const [resendEmail, setResendEmail] = useState('')
+  const [resending, setResending] = useState(false)
+  const [resent, setResent] = useState(false)
   // Évite un double appel en mode StrictMode (double montage en dev).
   const done = useRef(false)
 
@@ -30,10 +33,26 @@ export function ConfirmationPage() {
         setMessage(res?.message || 'Adresse confirmée. Tu peux maintenant te connecter.')
       })
       .catch((err) => {
-        setStatus('error')
-        setMessage(err.message || 'Ce lien de confirmation est invalide ou a expiré.')
+        if (err.status === 410) {
+          setStatus('expired')
+        } else {
+          setStatus('error')
+          setMessage(err.message || 'Ce lien de confirmation est invalide ou a expiré.')
+        }
       })
   }, [token, confirmEmail])
+
+  const handleResend = async () => {
+    setResending(true)
+    try {
+      await resendConfirmation(resendEmail)
+    } catch {
+      // réponse neutre : on confirme dans tous les cas
+    } finally {
+      setResent(true)
+      setResending(false)
+    }
+  }
 
   return (
     <Stack align="center" pt={{ base: 32, sm: 64 }} px="md" pb={48}>
@@ -69,6 +88,48 @@ export function ConfirmationPage() {
               <Button component={Link} to="/register" variant="default" mt="xs">
                 Revenir à l'inscription
               </Button>
+            </>
+          )}
+
+          {status === 'expired' && !resent && (
+            <>
+              <ThemeIcon size={56} radius="xl" variant="light" color="orange">
+                <IconCircleX size={32} />
+              </ThemeIcon>
+              <Title order={1} fz={24} fw={600} lts="-0.5px">Lien expiré</Title>
+              <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
+                Ce lien n'est plus valide (il expire après 24 h). Saisis ton adresse email
+                pour recevoir un nouveau lien de confirmation.
+              </Text>
+              <TextInput
+                w="100%"
+                placeholder="ton@email.com"
+                type="email"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.currentTarget.value)}
+              />
+              <Button
+                color="green"
+                fullWidth
+                loading={resending}
+                disabled={!/^\S+@\S+\.\S+$/.test(resendEmail)}
+                onClick={handleResend}
+              >
+                Recevoir un nouveau lien
+              </Button>
+            </>
+          )}
+
+          {status === 'expired' && resent && (
+            <>
+              <ThemeIcon size={56} radius="xl" variant="light" color="green">
+                <IconMailCheck size={32} />
+              </ThemeIcon>
+              <Title order={1} fz={24} fw={600} lts="-0.5px">Email envoyé</Title>
+              <Alert color="green" variant="light" w="100%" ta="left">
+                Si un compte non confirmé existe pour cet email, un nouveau lien vient d'être
+                envoyé. Pense à vérifier tes spams.
+              </Alert>
             </>
           )}
         </Stack>

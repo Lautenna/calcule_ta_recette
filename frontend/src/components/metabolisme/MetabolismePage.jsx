@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Stack, Title, Box, Text, NumberInput, SegmentedControl, Group, Paper, Grid, ThemeIcon } from '@mantine/core'
-import { IconFlame, IconScaleOutline, IconRulerMeasure, IconCake, IconGenderBigender } from '@tabler/icons-react'
+import { Stack, Title, Box, Text, NumberInput, SegmentedControl, Group, Paper, Grid, ThemeIcon, Button } from '@mantine/core'
+import { IconFlame, IconScaleOutline, IconRulerMeasure, IconCake, IconGenderBigender, IconDeviceFloppy, IconCheck } from '@tabler/icons-react'
+import { notifications } from '@mantine/notifications'
+import { useAuth } from '../../context/AuthContext'
 
 function SectionHeader({ title }) {
   return (
@@ -36,8 +38,23 @@ export function MetabolismePage() {
   const [poids, setPoids] = useState('')
   const [taille, setTaille] = useState('')
   const [age, setAge] = useState('')
+  const [saving, setSaving] = useState(false)
 
+  const { user, isAuthenticated, updateProfile } = useAuth()
   const mb = harrisBenedict1919({ sexe, poids, taille, age })
+
+  const handleSave = async () => {
+    if (mb === null) return
+    setSaving(true)
+    try {
+      await updateProfile({ metabolismeBase: Math.round(mb) })
+      notifications.show({ color: 'green', message: 'Métabolisme de base sauvegardé dans votre profil.' })
+    } catch {
+      notifications.show({ color: 'red', message: 'Échec de la sauvegarde.' })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <Stack gap={0} align="stretch">
@@ -156,6 +173,29 @@ export function MetabolismePage() {
                   <Text c="dimmed" size="sm" mt={16} style={{ lineHeight: 1.5 }}>
                     Énergie dépensée au repos sur une journée, hors activité physique.
                   </Text>
+                  {isAuthenticated && (
+                    <>
+                      <Button
+                        mt={20}
+                        size="sm"
+                        color="green"
+                        variant="light"
+                        leftSection={<IconDeviceFloppy size={16} />}
+                        loading={saving}
+                        onClick={handleSave}
+                      >
+                        Sauvegarder dans mon profil
+                      </Button>
+                      {user?.metabolismeBase && (
+                        <Group gap={6} justify="center" mt={8}>
+                          <IconCheck size={14} color="var(--mantine-color-green-6)" />
+                          <Text size="xs" c="green.6">
+                            Valeur enregistrée : {user.metabolismeBase} kcal/jour
+                          </Text>
+                        </Group>
+                      )}
+                    </>
+                  )}
                 </>
               ) : (
                 <>

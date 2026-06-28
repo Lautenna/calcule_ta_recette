@@ -5,7 +5,7 @@ import {
   Paper, Stack, Title, Text, TextInput, PasswordInput, Button, Anchor, Alert,
   ThemeIcon, Group,
 } from '@mantine/core'
-import { IconMailCheck } from '@tabler/icons-react'
+import { IconMailCheck, IconInfoCircle } from '@tabler/icons-react'
 import { useAuth } from '../context/AuthContext'
 
 // Écran affiché après une inscription réussie : invite à confirmer l'email.
@@ -57,6 +57,9 @@ export function RegisterPage() {
   const [registeredEmail, setRegisteredEmail] = useState(null)
   const [resending, setResending] = useState(false)
   const [resent, setResent] = useState(false)
+  const [emailExists, setEmailExists] = useState(false)
+  const [resendingExists, setResendingExists] = useState(false)
+  const [resentExists, setResentExists] = useState(false)
 
   const form = useForm({
     // Reprend l'email éventuellement saisi sur la page de connexion.
@@ -88,6 +91,12 @@ export function RegisterPage() {
         const fieldErrors = {}
         for (const v of err.violations) fieldErrors[v.propertyPath] = v.message
         form.setErrors(fieldErrors)
+        // Email refusé côté serveur = email déjà utilisé (le format est validé côté client).
+        if (fieldErrors.email) {
+          setEmailExists(true)
+          setResentExists(false)
+          return
+        }
       }
       setError(err.message || "Inscription impossible.")
     } finally {
@@ -104,6 +113,18 @@ export function RegisterPage() {
       setResent(true) // réponse neutre : on confirme l'envoi dans tous les cas
     } finally {
       setResending(false)
+    }
+  }
+
+  const handleResendExists = async () => {
+    setResendingExists(true)
+    try {
+      await resendConfirmation(form.values.email)
+    } catch {
+      // réponse neutre
+    } finally {
+      setResentExists(true)
+      setResendingExists(false)
     }
   }
 
@@ -132,7 +153,46 @@ export function RegisterPage() {
             {error && <Alert color="red" variant="light">{error}</Alert>}
 
             <TextInput label="Email" placeholder="ton@email.com" withAsterisk
-              {...form.getInputProps('email')} />
+              {...form.getInputProps('email')}
+              onChange={(e) => {
+                form.getInputProps('email').onChange(e)
+                setEmailExists(false)
+                setResentExists(false)
+              }}
+            />
+            {emailExists && (
+              <Alert
+                icon={<IconInfoCircle size={16} />}
+                color="blue"
+                variant="light"
+                p="sm"
+              >
+                <Stack gap={6}>
+                  <Text size="sm">Un compte existe déjà avec cet email.</Text>
+                  {resentExists ? (
+                    <Text size="sm" c="dimmed">
+                      Si ce compte n'est pas encore activé, un nouveau lien a été envoyé. Vérifie tes spams.
+                    </Text>
+                  ) : (
+                    <Group gap="xs" wrap="nowrap">
+                      <Button
+                        size="xs"
+                        variant="subtle"
+                        color="green"
+                        loading={resendingExists}
+                        onClick={handleResendExists}
+                      >
+                        Renvoyer le lien de confirmation
+                      </Button>
+                      <Text size="xs" c="dimmed">ou</Text>
+                      <Anchor component={Link} to="/login" size="xs" c="green">
+                        Se connecter
+                      </Anchor>
+                    </Group>
+                  )}
+                </Stack>
+              </Alert>
+            )}
             <TextInput label="Pseudo" placeholder="Ton nom ou pseudo" withAsterisk
               {...form.getInputProps('pseudo')} />
             <PasswordInput label="Mot de passe" placeholder="6 caractères minimum" withAsterisk

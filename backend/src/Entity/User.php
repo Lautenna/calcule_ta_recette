@@ -99,6 +99,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read'])]
     private ?string $photoProfil = null;
 
+    /**
+     * Métabolisme de base sauvegardé (kcal/jour, arrondi à l'entier).
+     * Seul le résultat est stocké — aucune donnée biométrique (âge, taille, poids).
+     */
+    #[ORM\Column(nullable: true)]
+    #[Groups(['user:read', 'user:write'])]
+    private ?int $metabolismeBase = null;
+
     #[ORM\Column]
     #[Groups(['user:read'])]
     private \DateTimeImmutable $createdAt;
@@ -327,6 +335,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         return $this->resetExpiresAt !== null
             && $this->resetExpiresAt > new \DateTimeImmutable();
+    }
+
+    public function getMetabolismeBase(): ?int
+    {
+        return $this->metabolismeBase;
+    }
+
+    public function setMetabolismeBase(?int $metabolismeBase): static
+    {
+        $this->metabolismeBase = $metabolismeBase;
+        return $this;
     }
 
     /**

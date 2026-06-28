@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Stack, Title, Box, Text, ThemeIcon, Button, Group, Modal, TextInput } from '@mantine/core'
+import { Stack, Title, Box, Text, ThemeIcon, Button, Group, Modal, TextInput, Paper } from '@mantine/core'
 import { IconChefHat, IconDeviceFloppy } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { computeTotals, computePerPortion, NUTRIENT_KEYS } from '../../utils/nutrition'
@@ -62,7 +62,7 @@ function SectionHeader({ title }) {
 export function CalculateurPage() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { user, isAuthenticated } = useAuth()
 
   // Recette transmise depuis « Mon profil » pour consultation/modification.
   const recetteAEditer = location.state?.recette ?? null
@@ -279,6 +279,41 @@ export function CalculateurPage() {
       <Box p={{ base: 16, sm: 24 }}>
         <MacroPieChart perPortion={perPortion} />
       </Box>
+
+      {user?.metabolismeBase > 0 && perPortion.energie_kcal > 0 && (
+        <>
+          <SectionHeader title="Par rapport à votre métabolisme de base" />
+          <Box p={{ base: 16, sm: 24 }}>
+            <Paper withBorder radius="md" p={{ base: 16, sm: 24 }}>
+              <Group justify="space-around" wrap="wrap" gap="xl">
+                <Box style={{ textAlign: 'center' }}>
+                  <Text fz={11} fw={700} tt="uppercase" ff="monospace" c="dimmed" style={{ letterSpacing: '0.1em' }} mb={4}>
+                    Métabolisme de base
+                  </Text>
+                  <Text fz={32} fw={700} c="green.7" lh={1}>{user.metabolismeBase}</Text>
+                  <Text fz={12} c="dimmed" mt={2}>kcal / jour</Text>
+                </Box>
+                <Box style={{ textAlign: 'center' }}>
+                  <Text fz={11} fw={700} tt="uppercase" ff="monospace" c="dimmed" style={{ letterSpacing: '0.1em' }} mb={4}>
+                    {perPortion.nom || 'Par portion'}
+                  </Text>
+                  <Text fz={32} fw={700} c="honey.7" lh={1}>{Math.round(perPortion.energie_kcal)}</Text>
+                  <Text fz={12} c="dimmed" mt={2}>kcal</Text>
+                </Box>
+                <Box style={{ textAlign: 'center' }}>
+                  <Text fz={11} fw={700} tt="uppercase" ff="monospace" c="dimmed" style={{ letterSpacing: '0.1em' }} mb={4}>
+                    Représente
+                  </Text>
+                  <Text fz={32} fw={700} c="blue.6" lh={1}>
+                    {Math.round((perPortion.energie_kcal / user.metabolismeBase) * 100)}&nbsp;%
+                  </Text>
+                  <Text fz={12} c="dimmed" mt={2}>du métabolisme de base</Text>
+                </Box>
+              </Group>
+            </Paper>
+          </Box>
+        </>
+      )}
 
       <Modal
         opened={modalOpen}

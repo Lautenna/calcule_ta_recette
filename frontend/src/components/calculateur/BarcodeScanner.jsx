@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Modal, Box, Text, Alert, Loader, Center, Stack } from '@mantine/core'
 import { IconAlertCircle } from '@tabler/icons-react'
-import { BrowserMultiFormatReader } from '@zxing/browser'
+import { BrowserMultiFormatReader, BrowserCodeReader } from '@zxing/browser'
 import { BarcodeFormat, DecodeHintType } from '@zxing/library'
 
-// On restreint aux formats de codes-barres alimentaires courants : décodage plus
-// rapide et moins de faux positifs que le mode « tous formats ».
 const hints = new Map()
 hints.set(DecodeHintType.POSSIBLE_FORMATS, [
   BarcodeFormat.EAN_13,
@@ -14,17 +12,11 @@ hints.set(DecodeHintType.POSSIBLE_FORMATS, [
   BarcodeFormat.UPC_E,
 ])
 
-/**
- * Ouvre la caméra (arrière sur mobile) et lit un code-barres en continu.
- * Appelle onDetected(code) au premier code lu, puis se referme via onClose.
- */
 export function BarcodeScanner({ opened, onClose, onDetected }) {
   const videoRef = useRef(null)
   const [error, setError] = useState(null)
   const [ready, setReady] = useState(false)
 
-  // onDetected change d'identité à chaque rendu parent : on le garde dans une ref
-  // pour ne pas relancer la caméra (effet dépendant uniquement de `opened`).
   const onDetectedRef = useRef(onDetected)
   onDetectedRef.current = onDetected
 
@@ -39,22 +31,25 @@ export function BarcodeScanner({ opened, onClose, onDetected }) {
 
     const reader = new BrowserMultiFormatReader(hints)
 
-    reader
-      .decodeFromConstraints(
-        { video: { facingMode: 'environment' } },
-        videoRef.current,
-        (result) => {
+    BrowserCodeReader.listVideoInputDevices()
+      .then((devices) => {
+        if (cancelled) return
+        if (devices.length === 0) {
+          setError('Aucune caméra détectée. Saisissez le code à la main.')
+          return
+        }
+        // Use first available device — avoids facingMode:'environment' issues on desktop
+        const deviceId = devices[0].deviceId
+        return reader.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
           if (result && !detected && !cancelled) {
             detected = true
             onDetectedRef.current(result.getText())
           }
-        },
-      )
+        })
+      })
       .then((ctrl) => {
-        if (cancelled) {
-          ctrl.stop()
-          return
-        }
+        if (!ctrl) return
+        if (cancelled) { ctrl.stop(); return }
         controls = ctrl
         setReady(true)
       })
@@ -63,8 +58,8 @@ export function BarcodeScanner({ opened, onClose, onDetected }) {
         const denied = err?.name === 'NotAllowedError' || err?.name === 'NotFoundError'
         setError(
           denied
-            ? "Accès à la caméra refusé ou indisponible. Autorisez la caméra ou saisissez le code à la main."
-            : "Impossible de démarrer la caméra. Saisissez le code à la main.",
+            ? 'Accès à la caméra refusé ou indisponible. Autorisez la caméra ou saisissez le code à la main.'
+            : 'Impossible de démarrer la caméra. Saisissez le code à la main.',
         )
       })
 
