@@ -90,6 +90,7 @@ class PasswordResetController extends AbstractController
 
         $user->setPassword($hasher->hashPassword($user, $plainPassword));
         $user->clearPasswordReset();
+        $user->confirmEmail();
         $em->flush();
 
         return new JsonResponse(

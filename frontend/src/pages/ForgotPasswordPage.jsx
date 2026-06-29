@@ -50,6 +50,9 @@ export function ForgotPasswordPage() {
               de réinitialisation vient d'être envoyé. Il est valable 1 heure. Pense à
               regarder dans les spams.
             </Text>
+            <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
+              Si tu ne reçois rien, cette adresse n'est associée à aucun compte.{' '}
+            </Text>
             <Text size="sm" c="dimmed">
               <Anchor component={Link} to="/login" c="green">Retour à la connexion</Anchor>
             </Text>

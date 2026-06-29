@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Stack, Title, Box, Text, ThemeIcon, Button, Group, Modal, TextInput, Paper } from '@mantine/core'
+import { Stack, Title, Box, Text, ThemeIcon, Button, Group, TextInput, Paper, Modal } from '@mantine/core'
 import { IconChefHat, IconDeviceFloppy } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { computeTotals, computePerPortion, NUTRIENT_KEYS } from '../../utils/nutrition'
@@ -75,8 +75,8 @@ export function CalculateurPage() {
       : [emptyIngredient()]
   )
 
-  const [modalOpen, setModalOpen] = useState(false)
   const [nomRecette, setNomRecette] = useState(recetteAEditer?.nom ?? '')
+  const [modalNomOpen, setModalNomOpen] = useState(false)
   const saveRecette = useSaveRecette()
   const updateRecette = useUpdateRecette()
   const enregistrement = saveRecette.isPending || updateRecette.isPending
@@ -160,7 +160,6 @@ export function CalculateurPage() {
     (i.type === 'recette' ? i.recetteId : (i.nom ?? '').trim()) && i.quantite
   )
 
-  // Clic sur « Enregistrer » : au moins 2 ingrédients, puis connexion si besoin.
   const handleSaveClick = () => {
     if (ingredientsRemplis.length < 2) {
       notifications.show({ color: 'red', message: 'Une recette doit contenir au moins 2 ingrédients renseignés.' })
@@ -170,7 +169,11 @@ export function CalculateurPage() {
       navigate('/login', { state: { from: { pathname: '/calculateur' } } })
       return
     }
-    setModalOpen(true)
+    if (!nomRecette.trim()) {
+      setModalNomOpen(true)
+      return
+    }
+    handleSaveRecette()
   }
 
   const handleSaveRecette = async () => {
@@ -185,7 +188,7 @@ export function CalculateurPage() {
         if (created?.id) setEditingId(created.id)
         notifications.show({ color: 'green', message: 'Recette enregistrée dans votre profil.' })
       }
-      setModalOpen(false)
+      setModalNomOpen(false)
     } catch (err) {
       notifications.show({ color: 'red', message: err.message || "Échec de l'enregistrement." })
     }
@@ -214,7 +217,52 @@ export function CalculateurPage() {
         </Text>
       </Box>
 
-      <SectionHeader title="Composition de la recette" />
+      <Box
+        py={10}
+        px={24}
+        style={{
+          background: 'var(--mantine-color-green-0)',
+          borderTop: '1px solid var(--mantine-color-green-1)',
+          borderBottom: '1px solid var(--mantine-color-green-1)',
+        }}
+      >
+        <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
+          <Text fz={11} fw={700} tt="uppercase" ff="monospace" c="green.7" style={{ letterSpacing: '0.15em', flexShrink: 0 }}>
+            Composition de la recette
+          </Text>
+          <Group gap={6} wrap="nowrap">
+            <TextInput
+              placeholder="Nom de la recette"
+              size="xs"
+              value={nomRecette}
+              onChange={(e) => setNomRecette(e.target.value)}
+              style={{ width: 200 }}
+            />
+            <Button
+              size="xs"
+              color="green"
+              leftSection={<IconDeviceFloppy size={14} />}
+              loading={enregistrement}
+              onClick={handleSaveClick}
+            >
+              {editingId ? 'Mettre à jour' : 'Enregistrer la recette'}
+            </Button>
+            {editingId && (
+              <Button
+                size="xs"
+                variant="default"
+                onClick={() => {
+                  setEditingId(null)
+                  setNomRecette('')
+                  navigate('/calculateur', { replace: true, state: null })
+                }}
+              >
+                Nouvelle recette
+              </Button>
+            )}
+          </Group>
+        </Group>
+      </Box>
       <IngredientBuilder
         ingredients={ingredients}
         portions={portions}
@@ -227,48 +275,6 @@ export function CalculateurPage() {
         onFillFromBarcode={onFillFromBarcode}
         onFillFromIngredient={onFillFromIngredient}
       />
-
-      {/* Enregistrer la recette — bloc mis en avant, juste après la composition */}
-      <Box
-        p={{ base: 20, sm: 28 }}
-        style={{
-          background: 'var(--mantine-color-green-0)',
-          borderTop: '1px solid var(--mantine-color-green-2)',
-          borderBottom: '1px solid var(--mantine-color-green-2)',
-          textAlign: 'center',
-        }}
-      >
-        <Stack gap={12} align="center">
-          <Group justify="center" gap="sm">
-            <Button
-              size="md"
-              color="green"
-              leftSection={<IconDeviceFloppy size={18} />}
-              onClick={handleSaveClick}
-            >
-              {editingId ? 'Mettre à jour la recette' : 'Enregistrer cette recette'}
-            </Button>
-            {editingId && (
-              <Button
-                size="md"
-                variant="default"
-                onClick={() => {
-                  setEditingId(null)
-                  setNomRecette('')
-                  navigate('/calculateur', { replace: true, state: null })
-                }}
-              >
-                Nouvelle recette
-              </Button>
-            )}
-          </Group>
-          <Text c="dimmed" size="sm" maw={560}>
-            Gardez cette recette dans votre profil pour la consulter, la modifier
-            plus tard ou la réutiliser comme ingrédient d’une autre recette.
-            {!isAuthenticated && ' Une connexion vous sera proposée.'}
-          </Text>
-        </Stack>
-      </Box>
 
       <SectionHeader title="Tableau nutritionnel" />
       <Box p={{ base: 16, sm: 24 }}>
@@ -316,9 +322,9 @@ export function CalculateurPage() {
       )}
 
       <Modal
-        opened={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingId ? 'Mettre à jour la recette' : 'Enregistrer la recette'}
+        opened={modalNomOpen}
+        onClose={() => setModalNomOpen(false)}
+        title="Donnez un nom à votre recette"
         centered
       >
         <Stack>
@@ -329,9 +335,10 @@ export function CalculateurPage() {
             onChange={(e) => setNomRecette(e.target.value)}
             data-autofocus
             withAsterisk
+            onKeyDown={(e) => { if (e.key === 'Enter' && nomRecette.trim()) handleSaveRecette() }}
           />
           <Group justify="flex-end">
-            <Button variant="default" onClick={() => setModalOpen(false)}>Annuler</Button>
+            <Button variant="default" onClick={() => setModalNomOpen(false)}>Annuler</Button>
             <Button
               color="green"
               loading={enregistrement}

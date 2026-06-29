@@ -322,13 +322,11 @@ function IngredientCard({
               <IconTrash size={14} />
             </ActionIcon>
           </Group>
-          <SimpleGrid cols={recettes.length > 0 ? 2 : 1} spacing="sm">
+          <SimpleGrid cols={2} spacing="sm">
             <ChoiceCard icon="🥕" title="Ingrédient" desc="Un aliment ou produit du quotidien"
               onClick={() => { onUpdate(ingredient.id, 'type', 'ingredient'); setStep('method') }} />
-            {recettes.length > 0 && (
-              <ChoiceCard icon="🍳" title="Recette" desc="Réutiliser une de vos recettes enregistrées"
-                onClick={() => { onUpdate(ingredient.id, 'type', 'recette'); setStep('recette_form') }} />
-            )}
+            <ChoiceCard icon="🍳" title="Recette" desc="Réutiliser une de vos recettes enregistrées"
+              onClick={() => { onUpdate(ingredient.id, 'type', 'recette'); setStep('recette_form') }} />
           </SimpleGrid>
         </Stack>
       )}
@@ -371,12 +369,18 @@ function IngredientCard({
               <IconTrash size={14} />
             </ActionIcon>
           </Group>
+          {recettes.length === 0 && (
+            <Text fz={12} c="dimmed">
+              Vous n'avez pas encore de recette enregistrée. Créez-en une depuis le calculateur et enregistrez-la dans votre profil.
+            </Text>
+          )}
           <Grid align="flex-end" gutter="sm">
             <Grid.Col span={{ base: 12, sm: 8 }}>
               <Select label="Recette enregistrée" placeholder="Choisir une recette…"
                 data={recettes.map((r) => ({ value: String(r.id), label: r.nom }))}
                 value={ingredient.recetteId ? String(ingredient.recetteId) : null}
                 error={errors.recetteId}
+                disabled={recettes.length === 0}
                 onChange={(val) => {
                   const recette = recettes.find((r) => String(r.id) === val) ?? null
                   onSelectRecette(ingredient.id, recette, recette ? recipePer100g(recette.composition) : null)
