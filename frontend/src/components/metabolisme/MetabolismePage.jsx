@@ -143,6 +143,7 @@ export function MetabolismePage() {
               radius="md"
               p={{ base: 24, sm: 28 }}
               h="100%"
+              data-testid="metabolisme-resultat"
               style={{
                 background: 'var(--mantine-color-green-0)',
                 border: '1px solid var(--mantine-color-green-2)',
@@ -164,6 +165,7 @@ export function MetabolismePage() {
                       fw={600}
                       c="honey.7"
                       lh={1}
+                      data-testid="metabolisme-valeur"
                       style={{ fontFamily: 'var(--mantine-font-family-headings)' }}
                     >
                       {Math.round(mb)}

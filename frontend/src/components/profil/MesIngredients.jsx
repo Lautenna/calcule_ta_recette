@@ -23,7 +23,7 @@ export function MesIngredients() {
   }
 
   return (
-    <Paper withBorder radius="md" p="lg">
+    <Paper withBorder radius="md" p="lg" data-testid="mes-ingredients">
       <Stack gap="md">
         <Group gap={10}>
           <IconSalad size={24} color="var(--mantine-color-green-6)" />
@@ -42,6 +42,7 @@ export function MesIngredients() {
           <Stack gap={6}>
             {ingredients.map((ing) => (
               <Group key={ing.id} justify="space-between" wrap="nowrap" gap="xs"
+                data-testid="ingredient-enregistre"
                 style={{
                   borderLeft: '3px solid var(--mantine-color-green-4)',
                   background: 'var(--mantine-color-green-0)',
@@ -54,7 +55,7 @@ export function MesIngredients() {
                     <Text fw={600} fz="sm" truncate>{ing.nom}</Text>
                     {ing.marque && <Text fz={11} c="dimmed" truncate>· {ing.marque}</Text>}
                   </Group>
-                  <Text fz={11} c="dimmed">
+                  <Text fz={11} c="dimmed" data-testid="ingredient-resume">
                     Pour 100g : {ing.energie_kcal ?? 0} kcal · P {ing.proteines ?? 0} g · G {ing.glucides ?? 0} g · L {ing.graisses ?? 0} g
                   </Text>
                 </Box>

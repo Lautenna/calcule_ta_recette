@@ -245,6 +245,10 @@ function IngredientCard({
   const peutEnregistrer = !isRecette && !ingredient.sourceIngredientId && !ingredient.sourceCiqual
   const nomAffiche = ingredient.nom || (isRecette ? 'Recette' : 'Ingrédient sans nom')
 
+  // `data-testid="carte-ingredient"`, posé sur la racine des DEUX vues (repliée et
+  // déployée), délimite une carte quelle que soit son état : c'est le seul repère
+  // qui permette de viser une carte précise quand la recette en compte plusieurs.
+  // Les étapes de l'assistant portent de même un `data-testid="etape-…"`.
   const cardStyle = {
     borderLeft: `3px solid ${validated ? 'var(--mantine-color-green-5)' : 'var(--mantine-color-green-3)'}`,
     paddingLeft: 12, paddingTop: 10, paddingBottom: 10, paddingRight: 8,
@@ -257,21 +261,22 @@ function IngredientCard({
   // ── Vue repliée ─────────────────────────────────────────────────────────────
   if (validated) {
     return (
-      <Box style={cardStyle}>
+      <Box style={cardStyle} data-testid="carte-ingredient">
         <Group justify="space-between" wrap="nowrap" gap="xs">
           <Group gap="sm" wrap="nowrap" style={{ minWidth: 0, flex: 1 }}>
             {ingredient.photo && (
               <img src={ingredient.photo} alt={nomAffiche} width={46} height={46}
+                data-testid="photo-produit"
                 style={{ objectFit: 'cover', borderRadius: 6, flexShrink: 0, border: '1px solid var(--mantine-color-gray-2)', background: 'white' }}
                 onError={(e) => { e.currentTarget.style.display = 'none' }} />
             )}
             <Box style={{ minWidth: 0, flex: 1 }}>
               <Group gap={6} wrap="nowrap" align="baseline" mb={8}>
-                <Text fw={600} fz="sm" truncate>{nomAffiche}</Text>
-                {isRecette && <Text fz={11} c="green.7" fw={600} style={{ flexShrink: 0 }}>· recette</Text>}
+                <Text fw={600} fz="sm" truncate data-testid="synthese-nom">{nomAffiche}</Text>
+                {isRecette && <Text fz={11} c="green.7" fw={600} style={{ flexShrink: 0 }} data-testid="marqueur-recette">· recette</Text>}
                 {ingredient.marque && <Text fz={11} c="dimmed" truncate>· {ingredient.marque}</Text>}
-                <Text fz={11} c="dimmed" style={{ flexShrink: 0 }}>· {ingredient.quantite || 0} g</Text>
-                <Text fz={11} c="dimmed" style={{ flexShrink: 0 }}>· {ingredient.energie_kcal || 0} kcal</Text>
+                <Text fz={11} c="dimmed" style={{ flexShrink: 0 }} data-testid="synthese-quantite">· {ingredient.quantite || 0} g</Text>
+                <Text fz={11} c="dimmed" style={{ flexShrink: 0 }} data-testid="synthese-energie">· {ingredient.energie_kcal || 0} kcal</Text>
               </Group>
               {/* Donuts AJR par macro (contribution pour la quantité réelle) */}
               <Group gap={10} wrap="nowrap">
@@ -309,11 +314,11 @@ function IngredientCard({
 
   // ── Vue déployée (étapes) ────────────────────────────────────────────────────
   return (
-    <Box style={cardStyle}>
+    <Box style={cardStyle} data-testid="carte-ingredient">
 
       {/* ÉTAPE 1 : Ingrédient ou Recette ? */}
       {step === 'type' && (
-        <Stack gap="sm">
+        <Stack gap="sm" data-testid="etape-type">
           <Group justify="space-between" align="center">
             <Text fz={11} c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: '0.06em' }}>
               Quel type ?
@@ -333,7 +338,7 @@ function IngredientCard({
 
       {/* ÉTAPE 2 : Comment identifier l'ingrédient ? */}
       {step === 'method' && (
-        <Stack gap="sm">
+        <Stack gap="sm" data-testid="etape-methode">
           <Group justify="space-between" align="center">
             <Anchor component="button" type="button" fz={12} c="dimmed"
               onClick={() => setStep('type')}
@@ -358,7 +363,7 @@ function IngredientCard({
 
       {/* ÉTAPE 2b (recette) : Sélection de recette + quantité */}
       {step === 'recette_form' && (
-        <Stack gap="sm">
+        <Stack gap="sm" data-testid="etape-recette">
           <Group justify="space-between" align="center">
             <Anchor component="button" type="button" fz={12} c="dimmed"
               onClick={() => { onUpdate(ingredient.id, 'type', 'ingredient'); setStep('type') }}
@@ -395,7 +400,7 @@ function IngredientCard({
             </Grid.Col>
           </Grid>
           {ingredient.recetteId && (
-            <Text fz={11} c="dimmed">
+            <Text fz={11} c="dimmed" data-testid="profil-recette">
               Profil pour 100 g : {Math.round(ingredient.energie_kcal || 0)} kcal ·{' '}
               <Text span fw={600} style={{ color: MACRO.proteines.color }}>P</Text> {Math.round(ingredient.proteines || 0)} g ·{' '}
               <Text span fw={600} style={{ color: MACRO.glucides.color }}>G</Text> {Math.round(ingredient.glucides || 0)} g ·{' '}
@@ -412,7 +417,7 @@ function IngredientCard({
 
       {/* ÉTAPE 3a : Saisie / scan du code-barres */}
       {step === 'barcode' && (
-        <Stack gap="sm">
+        <Stack gap="sm" data-testid="etape-code-barres">
           <Group justify="space-between" align="center">
             <Anchor component="button" type="button" fz={12} c="dimmed"
               onClick={() => setStep('method')}
@@ -458,7 +463,7 @@ function IngredientCard({
 
       {/* ÉTAPE 3b / finale : Nom + quantité + nutrition */}
       {step === 'fill' && (
-        <Stack gap={0}>
+        <Stack gap={0} data-testid="etape-saisie">
           <Group justify="space-between" align="center" mb={12}>
             {prevFillStep === 'edit' ? (
               <Anchor component="button" type="button" fz={12} c="dimmed"
@@ -475,6 +480,7 @@ function IngredientCard({
             <Group gap="xs" align="center">
               {ingredient.photo && (
                 <img src={ingredient.photo} alt={ingredient.nom || 'Produit'} width={30} height={30}
+                  data-testid="photo-produit"
                   style={{ objectFit: 'cover', borderRadius: 6, border: '1px solid var(--mantine-color-gray-2)' }}
                   onError={(e) => { e.currentTarget.style.display = 'none' }} />
               )}
@@ -652,7 +658,7 @@ export function IngredientBuilder({ ingredients, portions, setPortions, onUpdate
       <Box>
         <Text size="sm" fw={500} mb={8}>
           Nombre de portions :{' '}
-          <Text component="span" fw={700} c="green.7">{portions}</Text>
+          <Text component="span" fw={700} c="green.7" data-testid="portions-valeur">{portions}</Text>
         </Text>
         <Slider value={portions} onChange={setPortions} min={1} max={15} step={1}
           color="green" label={null} mb={4}

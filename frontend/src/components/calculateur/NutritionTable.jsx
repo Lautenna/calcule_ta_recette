@@ -2,13 +2,17 @@ import { useState } from 'react'
 import { Table, ScrollArea, Button, Text, Box } from '@mantine/core'
 import { fmt } from '../../utils/nutrition'
 
+// `testId` sert de repère aux tests E2E (`data-testid="cellule-<testId>"`) : il
+// reprend le vocabulaire affiché (« Lipides ») plutôt que la clé technique
+// (`graisses`), et permet de désigner une cellule par son sens au lieu de compter
+// les colonnes — l'ordre d'affichage peut changer sans casser les tests.
 const COLUMNS = [
-  { key: 'nom',          label: 'Ingrédient', unit: '',     align: 'left'  },
-  { key: 'quantite',     label: 'Quantité',   unit: 'g',    align: 'right' },
-  { key: 'energie_kcal', label: 'Énergie',    unit: 'kcal', align: 'right' },
-  { key: 'graisses',     label: 'Lipides',    unit: 'g',    align: 'right' },
-  { key: 'glucides',     label: 'Glucides',   unit: 'g',    align: 'right' },
-  { key: 'proteines',    label: 'Protéines',  unit: 'g',    align: 'right' },
+  { key: 'nom',          label: 'Ingrédient', unit: '',     align: 'left',  testId: 'ingredient' },
+  { key: 'quantite',     label: 'Quantité',   unit: 'g',    align: 'right', testId: 'quantite'   },
+  { key: 'energie_kcal', label: 'Énergie',    unit: 'kcal', align: 'right', testId: 'energie'    },
+  { key: 'graisses',     label: 'Lipides',    unit: 'g',    align: 'right', testId: 'lipides'    },
+  { key: 'glucides',     label: 'Glucides',   unit: 'g',    align: 'right', testId: 'glucides'   },
+  { key: 'proteines',    label: 'Protéines',  unit: 'g',    align: 'right', testId: 'proteines'  },
 ]
 
 const KEY_COLS = ['energie_kcal', 'graisses', 'glucides', 'proteines']
@@ -48,7 +52,7 @@ export function NutritionTable({ rows, total, perPortion }) {
   return (
     <Box style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 10, overflow: 'hidden' }}>
       <ScrollArea>
-        <Table style={{ minWidth: 520 }} withRowBorders={false}>
+        <Table style={{ minWidth: 520 }} withRowBorders={false} data-testid="tableau-nutritionnel">
           <Table.Thead>
             <Table.Tr>
               {COLUMNS.map(({ key, label, unit, align }) => (
@@ -69,11 +73,13 @@ export function NutritionTable({ rows, total, perPortion }) {
             {showIngredients && rows.map((row, i) => (
               <Table.Tr
                 key={i}
+                data-testid="ligne-ingredient"
                 style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
               >
-                {COLUMNS.map(({ key }) => (
+                {COLUMNS.map(({ key, testId }) => (
                   <Table.Td
                     key={key}
+                    data-testid={`cellule-${testId}`}
                     style={{
                       textAlign: key === 'nom' ? 'left' : 'right',
                       fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
@@ -109,10 +115,11 @@ export function NutritionTable({ rows, total, perPortion }) {
 
             {/* Total recette + Pour 100g — visibles uniquement en mode détail */}
             {showIngredients && (
-              <Table.Tr style={{ background: 'var(--mantine-color-default-hover)', borderBottom: '1px solid var(--mantine-color-default-border)' }}>
-                {COLUMNS.map(({ key }) => (
+              <Table.Tr data-testid="ligne-total" style={{ background: 'var(--mantine-color-default-hover)', borderBottom: '1px solid var(--mantine-color-default-border)' }}>
+                {COLUMNS.map(({ key, testId }) => (
                   <Table.Td
                     key={key}
+                    data-testid={`cellule-${testId}`}
                     style={{
                       textAlign: key === 'nom' ? 'left' : 'right',
                       fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
@@ -134,10 +141,11 @@ export function NutritionTable({ rows, total, perPortion }) {
             )}
 
             {showIngredients && (
-              <Table.Tr style={{ background: 'var(--mantine-color-default-hover)', borderBottom: '1px solid var(--mantine-color-default-border)' }}>
-                {COLUMNS.map(({ key }) => (
+              <Table.Tr data-testid="ligne-pour-100g" style={{ background: 'var(--mantine-color-default-hover)', borderBottom: '1px solid var(--mantine-color-default-border)' }}>
+                {COLUMNS.map(({ key, testId }) => (
                   <Table.Td
                     key={key}
+                    data-testid={`cellule-${testId}`}
                     style={{
                       textAlign: key === 'nom' ? 'left' : 'right',
                       fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
@@ -159,10 +167,11 @@ export function NutritionTable({ rows, total, perPortion }) {
             )}
 
             {/* Par portion — mis en avant */}
-            <Table.Tr style={{ background: 'var(--mantine-color-green-0)' }}>
-              {COLUMNS.map(({ key }) => (
+            <Table.Tr data-testid="ligne-par-portion" style={{ background: 'var(--mantine-color-green-0)' }}>
+              {COLUMNS.map(({ key, testId }) => (
                 <Table.Td
                   key={key}
+                  data-testid={`cellule-${testId}`}
                   style={{
                     textAlign: key === 'nom' ? 'left' : 'right',
                     fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,

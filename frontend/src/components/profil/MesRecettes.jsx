@@ -28,7 +28,7 @@ export function MesRecettes() {
   const handleEdit = (recette) => navigate('/calculateur', { state: { recette } })
 
   return (
-    <Paper withBorder radius="md" p="lg">
+    <Paper withBorder radius="md" p="lg" data-testid="mes-recettes">
       <Stack gap="md">
         <Group gap={10}>
           <IconChefHat size={24} color="var(--mantine-color-green-6)" />
@@ -47,6 +47,7 @@ export function MesRecettes() {
           <Stack gap={6}>
             {recettes.map((recette) => (
               <Group key={recette.id} justify="space-between" wrap="nowrap" gap="xs"
+                data-testid="recette-enregistree"
                 style={{
                   borderLeft: '3px solid var(--mantine-color-green-4)',
                   background: 'var(--mantine-color-green-0)',
@@ -56,7 +57,7 @@ export function MesRecettes() {
               >
                 <Box style={{ minWidth: 0 }}>
                   <Text fw={600} fz="sm" truncate>{recette.nom}</Text>
-                  <Text fz={11} c="dimmed">
+                  <Text fz={11} c="dimmed" data-testid="recette-resume">
                     {recette.nombrePersonnes} portion{recette.nombrePersonnes > 1 ? 's' : ''}
                     {' · '}{recette.composition?.length ?? 0} ingrédient{(recette.composition?.length ?? 0) > 1 ? 's' : ''}
                   </Text>

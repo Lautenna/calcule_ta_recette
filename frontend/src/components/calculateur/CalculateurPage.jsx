@@ -237,6 +237,10 @@ export function CalculateurPage() {
               value={nomRecette}
               onChange={(e) => setNomRecette(e.target.value)}
               style={{ width: 200 }}
+              /* Repère E2E : la fenêtre « Donnez un nom à votre recette » propose un
+                 second champ pour la même donnée — le placeholder ne suffit donc pas
+                 à désigner celui-ci sans ambiguïté. */
+              data-testid="champ-nom-recette"
             />
             <Button
               size="xs"
