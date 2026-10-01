@@ -1,0 +1,5 @@
+id,nom,marque,energie_kcal,energie_kj,graisses,graisses_sat,glucides,sucres,proteines,sel,fibres,fer,calcium,user_id
+4,NESTLE DESSERT Noir 2X205g,NESTLE DESSERT,548,2283,34,20.2,50.7,46.6,6,0.01,7.3,,,9
+5,Chocolat Blanc Pépites,Vahiné,533,2227,29,18,64,64,4.1,0.18,0,,,9
+6,Paysan Breton - Beurre moulé doux,Paysan Breton,744,3058,82,60,0.6,0.6,0.8,0.05,0,,,9
+7,Arôme vanille Bourbon,Vahiné,114,,0.14,,33,,0.05,,,,,9

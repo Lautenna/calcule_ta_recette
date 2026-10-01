@@ -20,33 +20,9 @@ import { ingredientAEnregistrer } from '../../fixtures/ingredients'
  * exister en base, email confirmé (`npm run seed`).
  */
 test.describe('Calculateur — enregistrer un ingrédient', () => {
-  /**
-   * Nom de l'ingrédient créé par CETTE exécution, suffixé par l'indice du worker
-   * Playwright qui la joue.
-   *
-   * Le compte de test est partagé, et son contenu fait partie de ce que le test
-   * vérifie. Deux exécutions simultanées du même cas (`--repeat-each`, réessais
-   * en parallèle) enregistreraient donc le même ingrédient dans la même liste :
-   * l'une effacerait celui de l'autre, ou en trouverait deux. Le test échouerait
-   * sans que l'application y soit pour rien — le pire défaut d'une suite
-   * automatisée.
-   *
-   * Un worker ne joue qu'un test à la fois : son indice suffit donc à garantir
-   * que deux exécutions concurrentes ne manipulent jamais le même ingrédient.
-   */
+
   const nomIngredient = () => `${ingredientAEnregistrer.nom} (poste ${test.info().workerIndex})`
 
-  /**
-   * On supprime cet ingrédient avant ET après le test : avant, parce qu'une
-   * exécution interrompue a pu le laisser derrière elle — le test ne prouverait
-   * alors rien en le « retrouvant » dans le profil ; après, pour ne rien laisser
-   * traîner en base.
-   *
-   * On ne vide PAS toute la liste du compte : cela effacerait l'ingrédient d'une
-   * exécution concurrente.
-   *
-   * Sans effet pour le cas non connecté, qui n'enregistre rien.
-   */
   test.beforeEach(() => supprimerIngredient(utilisateurMesIngredients.email, nomIngredient()))
   test.afterEach(() => supprimerIngredient(utilisateurMesIngredients.email, nomIngredient()))
 
