@@ -71,7 +71,10 @@ export function BarcodeScanner({ opened, onClose, onDetected }) {
 
   return (
     <Modal opened={opened} onClose={onClose} title="Scanner un code-barres" centered>
-      <Stack gap="sm">
+      {/* Repère E2E posé sur le CONTENU du modal, et non sur le composant :
+          Mantine rend une racine sans boîte propre, qu'un test ne peut pas voir
+          apparaître ni disparaître. */}
+      <Stack gap="sm" data-testid="modale-scanner">
         {error ? (
           <Alert color="red" icon={<IconAlertCircle size={16} />}>
             {error}
@@ -99,7 +102,7 @@ export function BarcodeScanner({ opened, onClose, onDetected }) {
                 </Center>
               )}
             </Box>
-            <Text fz="sm" c="dimmed" ta="center">
+            <Text fz="sm" c="dimmed" ta="center" data-testid="consigne-scanner">
               Placez le code-barres du produit dans le cadre.
             </Text>
           </>

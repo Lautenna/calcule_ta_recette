@@ -44,9 +44,11 @@ export function ForgotPasswordPage() {
             <ThemeIcon size={56} radius="xl" variant="light" color="green">
               <IconMailCheck size={30} />
             </ThemeIcon>
-            <Title order={1} fz={24} fw={600} lts="-0.5px">Vérifie ta boîte mail</Title>
+            <Title order={1} fz={24} fw={600} lts="-0.5px" data-testid="titre-verifier-email">
+              Vérifie ta boîte mail
+            </Title>
             <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
-              Si un compte existe pour <strong>{form.getValues().email}</strong>, un lien
+              Si un compte existe pour <strong data-testid="email-destinataire">{form.getValues().email}</strong>, un lien
               de réinitialisation vient d'être envoyé. Il est valable 1 heure. Pense à
               regarder dans les spams.
             </Text>
@@ -54,7 +56,9 @@ export function ForgotPasswordPage() {
               Si tu ne reçois rien, cette adresse n'est associée à aucun compte.{' '}
             </Text>
             <Text size="sm" c="dimmed">
-              <Anchor component={Link} to="/login" c="green">Retour à la connexion</Anchor>
+              <Anchor component={Link} to="/login" c="green" data-testid="lien-retour-connexion">
+                Retour à la connexion
+              </Anchor>
             </Text>
           </Stack>
         </Paper>
@@ -68,7 +72,9 @@ export function ForgotPasswordPage() {
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack gap="md">
             <Stack gap={4}>
-              <Title order={1} fz={26} fw={600} lts="-0.5px">Mot de passe oublié</Title>
+              <Title order={1} fz={26} fw={600} lts="-0.5px" data-testid="titre-mot-de-passe-oublie">
+                Mot de passe oublié
+              </Title>
               <Text c="dimmed" size="sm">
                 Saisis ton email : on t'envoie un lien pour en choisir un nouveau.
               </Text>
@@ -80,15 +86,19 @@ export function ForgotPasswordPage() {
               label="Email"
               placeholder="ton@email.com"
               withAsterisk
+              data-testid="champ-email"
               {...form.getInputProps('email')}
             />
 
-            <Button type="submit" color="green" loading={loading} fullWidth mt="xs">
+            <Button type="submit" color="green" loading={loading} fullWidth mt="xs"
+              data-testid="bouton-envoyer-lien">
               Envoyer le lien
             </Button>
 
             <Text size="sm" c="dimmed" ta="center">
-              <Anchor component={Link} to="/login" c="green">Retour à la connexion</Anchor>
+              <Anchor component={Link} to="/login" c="green" data-testid="lien-retour-connexion">
+                Retour à la connexion
+              </Anchor>
             </Text>
           </Stack>
         </form>

@@ -39,7 +39,7 @@ export function MesRecettes() {
         {isLoading ? (
           <Loader size="sm" color="green" />
         ) : recettes.length === 0 ? (
-          <Text c="dimmed" size="sm">
+          <Text c="dimmed" size="sm" data-testid="aucune-recette">
             Aucune recette enregistrée. Composez une recette dans le calculateur
             puis cliquez sur « Enregistrer cette recette ».
           </Text>
@@ -56,7 +56,7 @@ export function MesRecettes() {
                 }}
               >
                 <Box style={{ minWidth: 0 }}>
-                  <Text fw={600} fz="sm" truncate>{recette.nom}</Text>
+                  <Text fw={600} fz="sm" truncate data-testid="recette-nom">{recette.nom}</Text>
                   <Text fz={11} c="dimmed" data-testid="recette-resume">
                     {recette.nombrePersonnes} portion{recette.nombrePersonnes > 1 ? 's' : ''}
                     {' · '}{recette.composition?.length ?? 0} ingrédient{(recette.composition?.length ?? 0) > 1 ? 's' : ''}
@@ -69,6 +69,7 @@ export function MesRecettes() {
                     color="green"
                     leftSection={<IconPencil size={13} />}
                     onClick={() => handleEdit(recette)}
+                    data-testid="bouton-modifier-recette"
                   >
                     Modifier
                   </Button>
@@ -77,6 +78,7 @@ export function MesRecettes() {
                     color="red"
                     onClick={() => setConfirming(recette)}
                     aria-label={`Supprimer ${recette.nom}`}
+                    data-testid="bouton-supprimer-recette"
                   >
                     <IconTrash size={16} />
                   </ActionIcon>

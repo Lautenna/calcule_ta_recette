@@ -107,6 +107,7 @@ export function ProfilPage() {
             radius="xl"
             onClick={() => setSettingsOpen(true)}
             aria-label="Paramètres du compte"
+            data-testid="bouton-parametres-compte"
             style={{ position: 'absolute', top: 16, right: 16 }}
           >
             <IconSettings size={22} />
@@ -124,14 +125,17 @@ export function ProfilPage() {
             <Text fz={24} fw={700}>{user.pseudo?.charAt(0).toUpperCase()}</Text>
           </Avatar>
           <Box style={{ textAlign: 'left' }}>
-            <Title order={1} fz={{ base: 22, sm: 28 }} fw={700} lts="-0.5px">{user.pseudo}</Title>
+            <Title order={1} fz={{ base: 22, sm: 28 }} fw={700} lts="-0.5px" data-testid="titre-profil">
+              {user.pseudo}
+            </Title>
             <FileButton
               resetRef={resetRef}
               onChange={handlePhoto}
               accept="image/png,image/jpeg,image/webp,image/gif"
             >
               {(props) => (
-                <Button {...props} variant="subtle" color="green" size="compact-xs" loading={uploading}>
+                <Button {...props} variant="subtle" color="green" size="compact-xs" loading={uploading}
+                  data-testid="bouton-changer-photo">
                   Changer la photo
                 </Button>
               )}

@@ -207,7 +207,7 @@ export function CalculateurPage() {
         <ThemeIcon size={56} radius="xl" variant="light" color="green" mb={12}>
           <IconChefHat size={30} />
         </ThemeIcon>
-        <Title order={1} fz={{ base: 28, sm: 44 }} fw={600} lts="-0.5px">
+        <Title order={1} fz={{ base: 28, sm: 44 }} fw={600} lts="-0.5px" data-testid="titre-calculateur">
           {editingId ? `Modifier « ${nomRecette || 'ma recette'} »` : 'Calculer les valeurs nutritionnelles'}
         </Title>
         <Text c="dimmed" size="md" mt={10} maw={620} mx="auto" style={{ lineHeight: 1.6 }}>
@@ -248,6 +248,10 @@ export function CalculateurPage() {
               leftSection={<IconDeviceFloppy size={14} />}
               loading={enregistrement}
               onClick={handleSaveClick}
+              /* Deux repères pour un seul bouton : son libellé change une fois la
+                 recette créée, et c'est ce basculement que les tests observent
+                 pour savoir si l'application crée ou met à jour. */
+              data-testid={editingId ? 'bouton-mettre-a-jour' : 'bouton-enregistrer-recette'}
             >
               {editingId ? 'Mettre à jour' : 'Enregistrer la recette'}
             </Button>
@@ -255,6 +259,7 @@ export function CalculateurPage() {
               <Button
                 size="xs"
                 variant="default"
+                data-testid="bouton-nouvelle-recette"
                 onClick={() => {
                   setEditingId(null)
                   setNomRecette('')

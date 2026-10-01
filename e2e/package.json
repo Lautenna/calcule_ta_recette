@@ -1,0 +1,21 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "description": "Tests end-to-end Playwright du calculateur de recette",
+  "main": "index.js",
+  "scripts": {
+    "seed": "mariadb -u recette -precette -h 127.0.0.1 calculateur_recette < fixtures/seed.sql",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^26.1.2"
+  }
+}

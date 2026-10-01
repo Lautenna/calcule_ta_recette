@@ -69,14 +69,15 @@ export function MetabolismePage() {
         <ThemeIcon size={56} radius="xl" variant="light" color="green" mb={12}>
           <IconFlame size={30} />
         </ThemeIcon>
-        <Title order={1} fz={{ base: 28, sm: 44 }} fw={600} lts="-0.5px">
+        <Title order={1} fz={{ base: 28, sm: 44 }} fw={600} lts="-0.5px" data-testid="titre-metabolisme">
           Métabolisme de base
         </Title>
         <Text c="dimmed" size="md" mt={10} maw={620} mx="auto" style={{ lineHeight: 1.6 }}>
           Le métabolisme de base correspond à l'énergie minimale que votre corps
           dépense au repos pour assurer ses fonctions vitales (respiration,
           circulation, température…), sans aucune activité physique. Il est
-          estimé ici avec la formule de <strong>Harris &amp; Benedict (1919)</strong>.
+          estimé ici avec la formule de{' '}
+          <strong data-testid="mention-formule">Harris &amp; Benedict (1919)</strong>.
         </Text>
       </Box>
 
@@ -94,14 +95,18 @@ export function MetabolismePage() {
                     <IconGenderBigender size={16} color="var(--mantine-color-green-7)" />
                     <Text fz={13} fw={600}>Sexe</Text>
                   </Group>
+                  {/* Repères E2E : le data-testid du libellé désigne la cible du
+                      clic ; l'état coché, lui, reste porté par le bouton radio
+                      natif (cf. MetabolismePage.js). */}
                   <SegmentedControl
                     fullWidth
                     value={sexe}
                     onChange={setSexe}
                     color="green"
+                    data-testid="choix-sexe"
                     data={[
-                      { label: 'Femme', value: 'femme' },
-                      { label: 'Homme', value: 'homme' },
+                      { label: <span data-testid="sexe-femme">Femme</span>, value: 'femme' },
+                      { label: <span data-testid="sexe-homme">Homme</span>, value: 'homme' },
                     ]}
                   />
                 </div>
@@ -114,6 +119,7 @@ export function MetabolismePage() {
                   min={0}
                   value={poids}
                   onChange={setPoids}
+                  data-testid="champ-poids"
                 />
                 <NumberInput
                   label="Taille"
@@ -123,6 +129,7 @@ export function MetabolismePage() {
                   min={0}
                   value={taille}
                   onChange={setTaille}
+                  data-testid="champ-taille"
                 />
                 <NumberInput
                   label="Âge"
@@ -132,6 +139,7 @@ export function MetabolismePage() {
                   min={0}
                   value={age}
                   onChange={setAge}
+                  data-testid="champ-age"
                 />
               </Stack>
             </Paper>
@@ -171,7 +179,7 @@ export function MetabolismePage() {
                       {Math.round(mb)}
                     </Text>
                   </Group>
-                  <Text fz={18} fw={600} c="green.7" mt={4}>kcal / jour</Text>
+                  <Text fz={18} fw={600} c="green.7" mt={4} data-testid="unite-par-jour">kcal / jour</Text>
                   <Text c="dimmed" size="sm" mt={16} style={{ lineHeight: 1.5 }}>
                     Énergie dépensée au repos sur une journée, hors activité physique.
                   </Text>
@@ -185,6 +193,7 @@ export function MetabolismePage() {
                         leftSection={<IconDeviceFloppy size={16} />}
                         loading={saving}
                         onClick={handleSave}
+                        data-testid="bouton-sauvegarder-metabolisme"
                       >
                         Sauvegarder dans mon profil
                       </Button>
@@ -204,7 +213,7 @@ export function MetabolismePage() {
                   <ThemeIcon size={48} radius="xl" variant="light" color="gray" mb={12}>
                     <IconFlame size={26} />
                   </ThemeIcon>
-                  <Text c="dimmed" size="sm" style={{ lineHeight: 1.5 }}>
+                  <Text c="dimmed" size="sm" style={{ lineHeight: 1.5 }} data-testid="invitation-a-saisir">
                     Renseignez votre sexe, poids, taille et âge pour estimer votre
                     métabolisme de base.
                   </Text>

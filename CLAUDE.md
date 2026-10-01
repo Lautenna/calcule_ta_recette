@@ -13,6 +13,7 @@ Monorepo avec deux applications séparées :
 ```bash
 # Installation des dépendances
 make install
+cd backend && php bin/console messenger:consume async   # permet l'envoi de mails
 
 # Démarrer les serveurs (deux terminaux séparés)
 make start-back    # Symfony sur http://localhost:8000

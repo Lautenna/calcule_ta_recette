@@ -44,11 +44,14 @@ export function ResetPasswordPage() {
       <Stack align="center" pt={{ base: 32, sm: 64 }} px="md" pb={48}>
         <Paper withBorder shadow="sm" radius="md" p={{ base: 24, sm: 32 }} w="100%" maw={440}>
           <Stack gap="md" align="center" ta="center">
-            <Title order={1} fz={24} fw={600} lts="-0.5px">Lien invalide</Title>
+            <Title order={1} fz={24} fw={600} lts="-0.5px" data-testid="titre-lien-invalide">
+              Lien invalide
+            </Title>
             <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
               Ce lien de réinitialisation est incomplet : aucun jeton fourni.
             </Text>
-            <Button component={Link} to="/forgot-password" variant="default" mt="xs">
+            <Button component={Link} to="/forgot-password" variant="default" mt="xs"
+              data-testid="lien-demander-nouveau-lien">
               Demander un nouveau lien
             </Button>
           </Stack>
@@ -65,11 +68,13 @@ export function ResetPasswordPage() {
             <ThemeIcon size={56} radius="xl" variant="light" color="green">
               <IconCircleCheck size={32} />
             </ThemeIcon>
-            <Title order={1} fz={24} fw={600} lts="-0.5px">Mot de passe mis à jour 🎉</Title>
+            <Title order={1} fz={24} fw={600} lts="-0.5px" data-testid="titre-succes">
+              Mot de passe mis à jour 🎉
+            </Title>
             <Text c="dimmed" size="sm" style={{ lineHeight: 1.6 }}>
               Tu peux maintenant te connecter avec ton nouveau mot de passe.
             </Text>
-            <Button component={Link} to="/login" color="green" mt="xs">
+            <Button component={Link} to="/login" color="green" mt="xs" data-testid="lien-se-connecter">
               Se connecter
             </Button>
           </Stack>
@@ -84,7 +89,9 @@ export function ResetPasswordPage() {
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack gap="md">
             <Stack gap={4}>
-              <Title order={1} fz={26} fw={600} lts="-0.5px">Nouveau mot de passe</Title>
+              <Title order={1} fz={26} fw={600} lts="-0.5px" data-testid="titre-nouveau-mot-de-passe">
+                Nouveau mot de passe
+              </Title>
               <Text c="dimmed" size="sm">Choisis un nouveau mot de passe pour ton compte.</Text>
             </Stack>
 
@@ -92,7 +99,8 @@ export function ResetPasswordPage() {
               <Alert color="red" variant="light">
                 <Stack gap={8}>
                   <Text size="sm">{error}</Text>
-                  <Anchor component={Link} to="/forgot-password" c="green" size="sm">
+                  <Anchor component={Link} to="/forgot-password" c="green" size="sm"
+                    data-testid="lien-demander-nouveau-lien">
                     Demander un nouveau lien
                   </Anchor>
                 </Stack>
@@ -100,11 +108,14 @@ export function ResetPasswordPage() {
             )}
 
             <PasswordInput label="Mot de passe" placeholder="6 caractères minimum" withAsterisk
+              data-testid="champ-mot-de-passe"
               {...form.getInputProps('plainPassword')} />
             <PasswordInput label="Confirmer le mot de passe" placeholder="Répète le mot de passe" withAsterisk
+              data-testid="champ-confirmation"
               {...form.getInputProps('confirm')} />
 
-            <Button type="submit" color="green" loading={loading} fullWidth mt="xs">
+            <Button type="submit" color="green" loading={loading} fullWidth mt="xs"
+              data-testid="bouton-reinitialiser">
               Réinitialiser mon mot de passe
             </Button>
           </Stack>

@@ -52,7 +52,7 @@ export function MesIngredients() {
               >
                 <Box style={{ minWidth: 0 }}>
                   <Group gap={6} wrap="nowrap" align="baseline">
-                    <Text fw={600} fz="sm" truncate>{ing.nom}</Text>
+                    <Text fw={600} fz="sm" truncate data-testid="ingredient-nom">{ing.nom}</Text>
                     {ing.marque && <Text fz={11} c="dimmed" truncate>· {ing.marque}</Text>}
                   </Group>
                   <Text fz={11} c="dimmed" data-testid="ingredient-resume">
@@ -64,6 +64,7 @@ export function MesIngredients() {
                   color="red"
                   onClick={() => setConfirming(ing)}
                   aria-label={`Supprimer ${ing.nom}`}
+                  data-testid="bouton-supprimer-ingredient"
                   style={{ flexShrink: 0 }}
                 >
                   <IconTrash size={16} />

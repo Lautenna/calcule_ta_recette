@@ -210,6 +210,9 @@ export function NutritionTable({ rows, total, perPortion }) {
           size="xs"
           style={{ fontFamily: 'var(--mantine-font-family-monospace)', letterSpacing: '0.06em', fontSize: 11 }}
           onClick={() => setShowIngredients((v) => !v)}
+          /* Un seul bouton, deux repères : c'est son basculement — et donc l'état
+             du tableau — que les tests observent, pas son libellé. */
+          data-testid={showIngredients ? 'bouton-masquer-detail' : 'bouton-voir-detail'}
         >
           {showIngredients ? '▲ Masquer le détail par ingrédient' : '▼ Voir le détail par ingrédient'}
         </Button>

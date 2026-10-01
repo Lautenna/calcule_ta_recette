@@ -35,7 +35,7 @@ export function Navbar() {
   }
 
   return (
-    <header style={{
+    <header data-testid="navbar" style={{
       borderBottom: '3px solid var(--mantine-color-green-4)',
       boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
       display: 'flex',
@@ -86,7 +86,7 @@ export function Navbar() {
                 <Avatar src={user.photoProfil || null} size={36} radius="xl" color="green">
                   {user.pseudo?.charAt(0).toUpperCase()}
                 </Avatar>
-                <Text fz={15} fw={600}>{user.pseudo}</Text>
+                <Text fz={15} fw={600} data-testid="pseudo-utilisateur">{user.pseudo}</Text>
               </UnstyledButton>
             </Menu.Target>
             <Menu.Dropdown>
@@ -96,7 +96,8 @@ export function Navbar() {
             </Menu.Dropdown>
           </Menu>
         ) : (
-          <Button component={Link} to="/login" size="sm" variant="filled" color="green" ml={12}>
+          <Button component={Link} to="/login" size="sm" variant="filled" color="green" ml={12}
+            data-testid="lien-connexion">
             Connexion
           </Button>
         )}
@@ -118,7 +119,7 @@ export function Navbar() {
               <Avatar src={user.photoProfil || null} size={32} radius="xl" color="green">
                 {user.pseudo?.charAt(0).toUpperCase()}
               </Avatar>
-              <Text fw={600}>{user.pseudo}</Text>
+              <Text fw={600} data-testid="pseudo-utilisateur-mobile">{user.pseudo}</Text>
             </Group>
           ) : (
             <Text fw={600} ff="monospace" tt="uppercase" c="green.7" fz={14} style={{ letterSpacing: '0.1em' }}>
@@ -146,7 +147,8 @@ export function Navbar() {
               </Button>
             </>
           ) : (
-            <Button component={Link} to="/login" onClick={close} variant="filled" color="green">
+            <Button component={Link} to="/login" onClick={close} variant="filled" color="green"
+              data-testid="lien-connexion-mobile">
               Connexion
             </Button>
           )}

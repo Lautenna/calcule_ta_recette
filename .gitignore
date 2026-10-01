@@ -22,3 +22,10 @@ frontend/.env.*.local
 
 # Artefacts Playwright MCP (tests navigateur)
 .playwright-mcp/
+
+# Tests end-to-end Playwright
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/
+e2e/.auth/

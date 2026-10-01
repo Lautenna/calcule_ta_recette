@@ -1,0 +1,3 @@
+workers:
+  messenger-consume-async:
+    cmd: ['symfony', 'console', 'messenger:consume', 'async', '-vv']
