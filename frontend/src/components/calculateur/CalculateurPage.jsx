@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Stack, Title, Box, Text, ThemeIcon, Button, Group, TextInput, Paper, Modal } from '@mantine/core'
+import { Stack, Title, Box, Text, ThemeIcon, Button, Group, TextInput, Paper, Modal, Flex } from '@mantine/core'
 import { IconChefHat, IconDeviceFloppy } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { computeTotals, computePerPortion, NUTRIENT_KEYS } from '../../utils/nutrition'
@@ -40,6 +40,28 @@ function cleanForSave(ingredient) {
   return copy
 }
 
+// Brouillon : la recette en cours de saisie survit à un passage par /login
+// (le composant est démonté pendant la navigation). Stocké en sessionStorage,
+// donc propre à l'onglet et effacé à sa fermeture.
+const DRAFT_KEY = 'calculateur:brouillon'
+
+function loadDraft() {
+  try {
+    const draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY))
+    return Array.isArray(draft?.ingredients) && draft.ingredients.length ? draft : null
+  } catch {
+    return null
+  }
+}
+
+function saveDraft(draft) {
+  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)) } catch { /* stockage indisponible */ }
+}
+
+function clearDraft() {
+  try { sessionStorage.removeItem(DRAFT_KEY) } catch { /* stockage indisponible */ }
+}
+
 function SectionHeader({ title }) {
   return (
     <Box
@@ -67,19 +89,28 @@ export function CalculateurPage() {
   // Recette transmise depuis « Mon profil » pour consultation/modification.
   const recetteAEditer = location.state?.recette ?? null
 
+  // Brouillon à restaurer uniquement pour une nouvelle recette (pas en édition).
+  const [draft] = useState(() => (recetteAEditer ? null : loadDraft()))
+
   const [editingId, setEditingId] = useState(recetteAEditer?.id ?? null)
-  const [portions, setPortions] = useState(recetteAEditer?.nombrePersonnes ?? 4)
+  const [portions, setPortions] = useState(recetteAEditer?.nombrePersonnes ?? draft?.portions ?? 4)
   const [ingredients, setIngredients] = useState(() =>
     recetteAEditer?.composition?.length
       ? recetteAEditer.composition.map(fromComposition)
-      : [emptyIngredient()]
+      : draft?.ingredients ?? [emptyIngredient()]
   )
 
-  const [nomRecette, setNomRecette] = useState(recetteAEditer?.nom ?? '')
+  const [nomRecette, setNomRecette] = useState(recetteAEditer?.nom ?? draft?.nomRecette ?? '')
   const [modalNomOpen, setModalNomOpen] = useState(false)
   const saveRecette = useSaveRecette()
   const updateRecette = useUpdateRecette()
   const enregistrement = saveRecette.isPending || updateRecette.isPending
+
+  // Sauvegarde auto du brouillon tant qu'on ne modifie pas une recette existante.
+  useEffect(() => {
+    if (editingId) return
+    saveDraft({ ingredients, portions, nomRecette })
+  }, [editingId, ingredients, portions, nomRecette])
 
   const onAdd = () => setIngredients((prev) => [...prev, emptyIngredient()])
 
@@ -185,6 +216,7 @@ export function CalculateurPage() {
         notifications.show({ color: 'green', message: 'Recette mise à jour.' })
       } else {
         const created = await saveRecette.mutateAsync(body)
+        clearDraft()
         if (created?.id) setEditingId(created.id)
         notifications.show({ color: 'green', message: 'Recette enregistrée dans votre profil.' })
       }
@@ -219,24 +251,31 @@ export function CalculateurPage() {
 
       <Box
         py={10}
-        px={24}
+        px={{ base: 16, sm: 24 }}
         style={{
           background: 'var(--mantine-color-green-0)',
           borderTop: '1px solid var(--mantine-color-green-1)',
           borderBottom: '1px solid var(--mantine-color-green-1)',
         }}
       >
-        <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
+        {/* Sur mobile le titre, le champ et les boutons s'empilent ; dès `sm` ils
+            restent sur une seule ligne. */}
+        <Flex
+          direction={{ base: 'column', sm: 'row' }}
+          justify="space-between"
+          align={{ base: 'stretch', sm: 'center' }}
+          gap="sm"
+        >
           <Text fz={11} fw={700} tt="uppercase" ff="monospace" c="green.7" style={{ letterSpacing: '0.15em', flexShrink: 0 }}>
             Composition de la recette
           </Text>
-          <Group gap={6} wrap="nowrap">
+          <Group gap={6} wrap="wrap">
             <TextInput
               placeholder="Nom de la recette"
               size="xs"
               value={nomRecette}
               onChange={(e) => setNomRecette(e.target.value)}
-              style={{ width: 200 }}
+              style={{ flex: '1 1 160px', minWidth: 0, maxWidth: 200 }}
               /* Repère E2E : la fenêtre « Donnez un nom à votre recette » propose un
                  second champ pour la même donnée — le placeholder ne suffit donc pas
                  à désigner celui-ci sans ambiguïté. */
@@ -270,7 +309,7 @@ export function CalculateurPage() {
               </Button>
             )}
           </Group>
-        </Group>
+        </Flex>
       </Box>
       <IngredientBuilder
         ingredients={ingredients}

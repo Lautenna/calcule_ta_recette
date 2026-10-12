@@ -17,6 +17,14 @@ export const NUTRIENT_LABELS = {
   calcium:      { label: 'Calcium', unit: 'mg' },
 }
 
+// Code couleur des macronutriments, partagé par la répartition en camembert et
+// par les repères P/G/L des ingrédients pour qu'une couleur désigne toujours la même macro.
+export const MACRO_COLORS = {
+  graisses: '#E8B931',
+  glucides: '#6ABFA0',
+  proteines: '#C8845A',
+}
+
 export function computeRow(ingredient) {
   const q = parseFloat(ingredient.quantite) || 0
   const row = { nom: ingredient.nom, quantite: q, isRecette: ingredient.type === 'recette' }

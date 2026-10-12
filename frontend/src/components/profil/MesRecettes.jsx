@@ -4,6 +4,7 @@ import { Paper, Stack, Group, Text, ActionIcon, Button, Loader, Box, Modal } fro
 import { IconTrash, IconChefHat, IconPencil } from '@tabler/icons-react'
 import { notifications } from '@mantine/notifications'
 import { useRecettes, useDeleteRecette } from '../../hooks/useRecettes'
+import { RecetteViewModal } from './RecetteViewModal'
 
 export function MesRecettes() {
   const navigate = useNavigate()
@@ -11,6 +12,7 @@ export function MesRecettes() {
   const deleteRecette = useDeleteRecette()
   const recettes = data?.member ?? []
   const [confirming, setConfirming] = useState(null) // recette en attente de confirmation
+  const [viewing, setViewing] = useState(null) // recette ouverte en consultation
 
   const confirmDelete = async () => {
     const recette = confirming
@@ -55,7 +57,14 @@ export function MesRecettes() {
                   padding: '6px 8px 6px 12px',
                 }}
               >
-                <Box style={{ minWidth: 0 }}>
+                <Box
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setViewing(recette)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setViewing(recette) } }}
+                  data-testid="bouton-voir-recette"
+                  style={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
+                >
                   <Text fw={600} fz="sm" truncate data-testid="recette-nom">{recette.nom}</Text>
                   <Text fz={11} c="dimmed" data-testid="recette-resume">
                     {recette.nombrePersonnes} portion{recette.nombrePersonnes > 1 ? 's' : ''}
@@ -88,6 +97,8 @@ export function MesRecettes() {
           </Stack>
         )}
       </Stack>
+
+      <RecetteViewModal recette={viewing} onClose={() => setViewing(null)} />
 
       <Modal opened={Boolean(confirming)} onClose={() => setConfirming(null)} title="Supprimer la recette" centered>
         <Stack>

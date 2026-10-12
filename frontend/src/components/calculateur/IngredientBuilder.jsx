@@ -9,7 +9,7 @@ import { useIngredients, useSaveIngredient } from '../../hooks/useIngredients'
 import { useAliments } from '../../hooks/useAliments'
 import { useProduitCodeBarre } from '../../hooks/useProduitCodeBarre'
 import { useAuth } from '../../context/AuthContext'
-import { recipePer100g } from '../../utils/nutrition'
+import { recipePer100g, MACRO_COLORS } from '../../utils/nutrition'
 import { BarcodeScanner } from './BarcodeScanner'
 
 const PERSO_PREFIX = '⭐ '
@@ -20,9 +20,9 @@ const BARCODE_PREFIX = '🔍 Rechercher le code-barres '
 // technique (`graisses`) : les tests désignent un champ par ce qu'il signifie
 // pour l'utilisateur (cf. CarteIngredient.js).
 const MACRO = {
-  proteines: { label: 'P', full: 'Protéines (g)', color: 'var(--mantine-color-blue-6)', rda: 50, testId: 'proteines' },
-  glucides: { label: 'G', full: 'Glucides (g)', color: 'var(--mantine-color-orange-6)', rda: 260, testId: 'glucides' },
-  graisses: { label: 'L', full: 'Lipides (g)', color: 'var(--mantine-color-grape-6)', rda: 70, testId: 'lipides' },
+  proteines: { label: 'P', full: 'Protéines (g)', color: MACRO_COLORS.proteines, rda: 50, testId: 'proteines' },
+  glucides: { label: 'G', full: 'Glucides (g)', color: MACRO_COLORS.glucides, rda: 260, testId: 'glucides' },
+  graisses: { label: 'L', full: 'Lipides (g)', color: MACRO_COLORS.graisses, rda: 70, testId: 'lipides' },
 }
 
 // Provenance d'une suggestion de la liste déroulante, déduite du préfixe que
@@ -633,7 +633,7 @@ function IngredientCard({
           )}
 
           {/* Pied : enregistrement + Terminer */}
-          <Group justify={peutEnregistrer ? 'space-between' : 'flex-end'} mt={14} align="center" wrap="nowrap">
+          <Group justify={peutEnregistrer ? 'space-between' : 'flex-end'} mt={14} align="center" wrap="wrap" gap="xs">
             {peutEnregistrer && (
               <Button size="compact-xs"
                 variant={savedNow ? 'light' : 'filled'}

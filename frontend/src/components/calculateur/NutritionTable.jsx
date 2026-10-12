@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Table, ScrollArea, Button, Text, Box } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import { fmt } from '../../utils/nutrition'
 
 // `testId` sert de repère aux tests E2E (`data-testid="cellule-<testId>"`) : il
@@ -23,7 +24,7 @@ function fmtCell(key, value) {
   return fmt(value)
 }
 
-const thStyle = (key) => ({
+const thStyle = (key, padX) => ({
   fontFamily: 'var(--mantine-font-family-monospace)',
   fontSize: 11,
   letterSpacing: '0.07em',
@@ -32,7 +33,7 @@ const thStyle = (key) => ({
   background: 'var(--mantine-color-default-hover)',
   color: KEY_COLS.includes(key) ? 'var(--mantine-color-green-7)' : 'var(--mantine-color-dimmed)',
   fontWeight: KEY_COLS.includes(key) ? 700 : 500,
-  padding: '12px 16px',
+  padding: `12px ${padX}px`,
 })
 
 function per100g(total) {
@@ -45,18 +46,21 @@ function per100g(total) {
   return result
 }
 
-export function NutritionTable({ rows, total, perPortion }) {
+export function NutritionTable({ rows, total, perPortion, hideDetail = false }) {
   const [showIngredients, setShowIngredients] = useState(false)
   const p100 = per100g(total)
+  // Sur mobile on resserre les colonnes pour qu'un maximum de valeurs tienne à l'écran.
+  const compact = useMediaQuery('(max-width: 48em)')
+  const padX = compact ? 8 : 16
 
   return (
     <Box style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 10, overflow: 'hidden' }}>
       <ScrollArea>
-        <Table style={{ minWidth: 520 }} withRowBorders={false} data-testid="tableau-nutritionnel">
+        <Table style={{ minWidth: compact ? 0 : 520 }} withRowBorders={false} data-testid="tableau-nutritionnel">
           <Table.Thead>
             <Table.Tr>
               {COLUMNS.map(({ key, label, unit, align }) => (
-                <Table.Th key={key} style={{ ...thStyle(key), textAlign: align }}>
+                <Table.Th key={key} style={{ ...thStyle(key, padX), textAlign: align }}>
                   {label}
                   {unit && (
                     <Text component="span" display="block" fw={400} fz={10} style={{ opacity: 0.55, textTransform: 'none', letterSpacing: 0 }}>
@@ -84,7 +88,7 @@ export function NutritionTable({ rows, total, perPortion }) {
                       textAlign: key === 'nom' ? 'left' : 'right',
                       fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
                       fontSize: 13,
-                      padding: '10px 16px',
+                      padding: `10px ${padX}px`,
                       color: 'var(--mantine-color-dimmed)',
                       textTransform: key === 'nom' ? 'capitalize' : undefined,
                     }}
@@ -124,7 +128,7 @@ export function NutritionTable({ rows, total, perPortion }) {
                       textAlign: key === 'nom' ? 'left' : 'right',
                       fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
                       fontSize: 13,
-                      padding: '12px 16px',
+                      padding: `12px ${padX}px`,
                       color: 'var(--mantine-color-dimmed)',
                     }}
                   >
@@ -150,7 +154,7 @@ export function NutritionTable({ rows, total, perPortion }) {
                       textAlign: key === 'nom' ? 'left' : 'right',
                       fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
                       fontSize: 13,
-                      padding: '12px 16px',
+                      padding: `12px ${padX}px`,
                       color: 'var(--mantine-color-dimmed)',
                     }}
                   >
@@ -177,7 +181,7 @@ export function NutritionTable({ rows, total, perPortion }) {
                     fontFamily: key !== 'nom' ? 'var(--mantine-font-family-monospace)' : undefined,
                     fontSize: KEY_COLS.includes(key) ? 16 : 14,
                     fontWeight: KEY_COLS.includes(key) ? 700 : 600,
-                    padding: '16px 16px',
+                    padding: `16px ${padX}px`,
                     color: KEY_COLS.includes(key) ? 'var(--mantine-color-green-8)' : undefined,
                   }}
                 >
@@ -195,6 +199,7 @@ export function NutritionTable({ rows, total, perPortion }) {
         </Table>
       </ScrollArea>
 
+      {!hideDetail && (
       <Box
         style={{
           borderTop: '1px solid var(--mantine-color-default-border)',
@@ -217,6 +222,7 @@ export function NutritionTable({ rows, total, perPortion }) {
           {showIngredients ? '▲ Masquer le détail par ingrédient' : '▼ Voir le détail par ingrédient'}
         </Button>
       </Box>
+      )}
     </Box>
   )
 }

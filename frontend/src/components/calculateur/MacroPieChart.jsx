@@ -1,4 +1,5 @@
 import { Group, Stack, Text, Box } from '@mantine/core'
+import { MACRO_COLORS } from '../../utils/nutrition'
 import './pie.css'
 
 export function MacroPieChart({ perPortion }) {
@@ -17,9 +18,9 @@ export function MacroPieChart({ perPortion }) {
   const C = 2 * Math.PI * RADIUS
 
   const slices = [
-    { label: 'Lipides',   cal: lipCal, color: '#E8B931', grams: perPortion.graisses  || 0 },
-    { label: 'Glucides',  cal: gluCal, color: '#6ABFA0', grams: perPortion.glucides   || 0 },
-    { label: 'Protéines', cal: proCal, color: '#C8845A', grams: perPortion.proteines  || 0 },
+    { label: 'Lipides',   cal: lipCal, color: MACRO_COLORS.graisses, grams: perPortion.graisses  || 0 },
+    { label: 'Glucides',  cal: gluCal, color: MACRO_COLORS.glucides, grams: perPortion.glucides   || 0 },
+    { label: 'Protéines', cal: proCal, color: MACRO_COLORS.proteines, grams: perPortion.proteines  || 0 },
   ]
 
   let offset = 0
@@ -31,7 +32,7 @@ export function MacroPieChart({ perPortion }) {
   })
 
   return (
-    <Group justify="center" align="center" gap={56} wrap="wrap">
+    <Group justify="center" align="center" gap={{ base: 24, sm: 56 }} wrap="wrap">
       <Box style={{ flexShrink: 0 }}>
         <svg
           viewBox="0 0 200 200"

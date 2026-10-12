@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Modal, Box, Text, Alert, Loader, Center, Stack } from '@mantine/core'
-import { IconAlertCircle } from '@tabler/icons-react'
+import { Modal, Box, Text, Alert, Loader, Center, Stack, ActionIcon, Tooltip } from '@mantine/core'
+import { IconAlertCircle, IconCameraRotate } from '@tabler/icons-react'
 import { BrowserMultiFormatReader, BrowserCodeReader } from '@zxing/browser'
 import { BarcodeFormat, DecodeHintType } from '@zxing/library'
 
@@ -16,6 +16,11 @@ export function BarcodeScanner({ opened, onClose, onDetected }) {
   const videoRef = useRef(null)
   const [error, setError] = useState(null)
   const [ready, setReady] = useState(false)
+  // Caméra demandée : null = celle de l'arrière par défaut, sinon un deviceId.
+  const [deviceId, setDeviceId] = useState(null)
+  const [devices, setDevices] = useState([])
+  // Caméra réellement utilisée (le navigateur peut ne pas la renseigner).
+  const currentIdRef = useRef(null)
 
   const onDetectedRef = useRef(onDetected)
   onDetectedRef.current = onDetected
@@ -31,30 +36,37 @@ export function BarcodeScanner({ opened, onClose, onDetected }) {
 
     const reader = new BrowserMultiFormatReader(hints)
 
-    BrowserCodeReader.listVideoInputDevices()
-      .then((devices) => {
-        if (cancelled) return
-        if (devices.length === 0) {
-          setError('Aucune caméra détectée. Saisissez le code à la main.')
-          return
+    // Par défaut on vise la caméra arrière ("ideal" : sans effet bloquant sur
+    // un ordinateur, qui n'en a qu'une). Un deviceId précis est demandé quand
+    // l'utilisatrice bascule de caméra.
+    const constraints = {
+      video: deviceId
+        ? { deviceId: { exact: deviceId } }
+        : { facingMode: { ideal: 'environment' } },
+    }
+
+    reader
+      .decodeFromConstraints(constraints, videoRef.current, (result) => {
+        if (result && !detected && !cancelled) {
+          detected = true
+          onDetectedRef.current(result.getText())
         }
-        // Use first available device — avoids facingMode:'environment' issues on desktop
-        const deviceId = devices[0].deviceId
-        return reader.decodeFromVideoDevice(deviceId, videoRef.current, (result, err) => {
-          if (result && !detected && !cancelled) {
-            detected = true
-            onDetectedRef.current(result.getText())
-          }
-        })
       })
-      .then((ctrl) => {
-        if (!ctrl) return
+      .then(async (ctrl) => {
         if (cancelled) { ctrl.stop(); return }
         controls = ctrl
+        const track = videoRef.current?.srcObject?.getVideoTracks?.()[0]
+        currentIdRef.current = track?.getSettings?.().deviceId ?? deviceId
+        // Les noms et ids ne sont fiables qu'une fois la permission accordée.
+        const found = await BrowserCodeReader.listVideoInputDevices().catch(() => [])
+        if (cancelled) return
+        setDevices(found)
         setReady(true)
       })
       .catch((err) => {
         if (cancelled) return
+        // Caméra mémorisée devenue introuvable : retour à la caméra par défaut.
+        if (deviceId) { setDeviceId(null); return }
         const denied = err?.name === 'NotAllowedError' || err?.name === 'NotFoundError'
         setError(
           denied
@@ -67,7 +79,12 @@ export function BarcodeScanner({ opened, onClose, onDetected }) {
       cancelled = true
       controls?.stop()
     }
-  }, [opened])
+  }, [opened, deviceId])
+
+  const basculerCamera = () => {
+    const index = devices.findIndex((d) => d.deviceId === currentIdRef.current)
+    setDeviceId(devices[(index + 1) % devices.length].deviceId)
+  }
 
   return (
     <Modal opened={opened} onClose={onClose} title="Scanner un code-barres" centered>
@@ -96,6 +113,23 @@ export function BarcodeScanner({ opened, onClose, onDetected }) {
                 muted
                 playsInline
               />
+              {devices.length > 1 && (
+                <Tooltip label="Changer de caméra" withArrow>
+                  <ActionIcon
+                    variant="filled"
+                    color="dark"
+                    size="lg"
+                    radius="xl"
+                    onClick={basculerCamera}
+                    disabled={!ready}
+                    aria-label="Changer de caméra"
+                    data-testid="bouton-changer-camera"
+                    style={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}
+                  >
+                    <IconCameraRotate size={20} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
               {!ready && (
                 <Center style={{ position: 'absolute', inset: 0 }}>
                   <Loader color="green" />
